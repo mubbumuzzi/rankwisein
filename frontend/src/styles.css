@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  font-family: 'Inter', system-ui, sans-serif;
+  @apply bg-slate-50 text-rw-primary;
+}
+
+.mat-mdc-form-field {
+  width: 100%;
+}
+
+@layer components {
+  .bucket-dream {
+    @apply border border-violet-200 bg-violet-100 text-violet-800;
+  }
+
+  .bucket-target {
+    @apply border border-sky-200 bg-sky-100 text-sky-800;
+  }
+
+  .bucket-safe {
+    @apply border border-emerald-200 bg-emerald-100 text-emerald-800;
+  }
+}

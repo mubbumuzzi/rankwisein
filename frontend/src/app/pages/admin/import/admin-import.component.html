@@ -1,0 +1,226 @@
+<div class="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+  <div class="mb-8 flex flex-wrap items-center justify-between gap-4">
+    <div>
+      <h1 class="text-3xl font-bold text-rw-primary">PDF Cutoff Import</h1>
+      <p class="mt-1 text-slate-600">
+        Upload TG EAPCET last-rank PDF → preview → approve to save cutoffs.
+      </p>
+    </div>
+    <div class="flex items-center gap-2">
+      <span class="text-sm text-slate-500">Logged in as {{ auth.getUsername() }}</span>
+      <button mat-stroked-button type="button" (click)="logout()">Logout</button>
+      <a routerLink="/" class="text-sm text-rw-accent hover:underline">Student site</a>
+    </div>
+  </div>
+
+  @if (metaLoading()) {
+    <app-loading-spinner message="Loading options…" />
+  } @else {
+    <!-- Upload card -->
+    <section class="mb-10 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+      <h2 class="text-lg font-semibold text-rw-primary">1. Upload PDF</h2>
+      <p class="mt-1 text-sm text-slate-500">
+        Use official TG EAPCET last rank statement PDF (e.g. TGEAPCET_2025_LASTRANKS_FirstPhase.pdf).
+      </p>
+
+      <div class="mt-6 grid gap-4 sm:grid-cols-2">
+        <div>
+          <label class="mb-2 block text-sm font-medium text-rw-primary">PDF file</label>
+          <input
+            type="file"
+            accept=".pdf,application/pdf"
+            class="block w-full text-sm text-slate-600 file:mr-4 file:rounded-lg file:border-0 file:bg-rw-accent file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-rw-accent-hover"
+            (change)="onFileSelected($event)"
+          />
+          @if (selectedFile(); as f) {
+            <p class="mt-2 text-xs text-slate-500">{{ f.name }} ({{ f.size | number }} bytes)</p>
+          }
+        </div>
+
+        <div class="grid gap-4 sm:grid-cols-2">
+          <mat-form-field appearance="outline">
+            <mat-label>Year</mat-label>
+            <mat-select [value]="year()" (selectionChange)="year.set($event.value)">
+              @for (y of meta()?.years ?? []; track y) {
+                <mat-option [value]="y">{{ y }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Phase</mat-label>
+            <mat-select [value]="phase()" (selectionChange)="phase.set($event.value)">
+              @for (p of meta()?.phases ?? []; track p) {
+                <mat-option [value]="p">{{ formatPhase(p) }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+        </div>
+      </div>
+
+      @if (uploading()) {
+        <mat-progress-bar mode="indeterminate" class="mt-4" />
+      }
+
+      <button
+        mat-flat-button
+        type="button"
+        class="mt-6 !rounded-xl !bg-rw-accent !px-8 !font-semibold"
+        [disabled]="uploading() || !selectedFile()"
+        (click)="upload()"
+      >
+        {{ uploading() ? 'Parsing PDF…' : 'Upload & Parse' }}
+      </button>
+    </section>
+
+    @if (errorMessage()) {
+      <div class="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+        {{ errorMessage() }}
+      </div>
+    }
+
+    @if (successMessage()) {
+      <div class="mb-6 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+        {{ successMessage() }}
+      </div>
+    }
+
+    <div class="mb-6 rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-900">
+      <div class="font-semibold">Mistake (wrong phase/year)? Rollback</div>
+      <p class="mt-1 text-red-800">
+        If you approved a PDF into the wrong phase, delete all cutoffs for the selected year + phase and re-import.
+      </p>
+      <button
+        mat-stroked-button
+        type="button"
+        class="mt-3 !border-red-300 !text-red-800"
+        (click)="purgeCutoffs()"
+      >
+        Delete cutoffs for {{ year() }} / {{ formatPhase(phase()) }}
+      </button>
+    </div>
+
+    <!-- Preview -->
+    @if (uploadResult(); as upload) {
+      <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+        <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h2 class="text-lg font-semibold text-rw-primary">2. Preview before import</h2>
+            <p class="text-sm text-slate-500">
+              Import #{{ upload.importId }} · {{ upload.year }} · {{ formatPhase(upload.phase) }} ·
+              Status: {{ upload.status }}
+            </p>
+          </div>
+          <button
+            mat-flat-button
+            type="button"
+            class="!rounded-xl !bg-rw-primary !font-semibold"
+            [disabled]="approving() || upload.status === 'IMPORTED' || upload.validRows === upload.duplicateRows"
+            (click)="approve()"
+          >
+            {{ approving() ? 'Importing…' : 'Approve Import' }}
+          </button>
+        </div>
+
+        @if (upload.validRows === upload.duplicateRows && upload.validRows > 0) {
+          <div class="mb-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            This upload looks like a re-upload of data that’s already in the database.
+            All rows are marked <strong>Duplicate</strong>, so approving would insert <strong>0</strong> new rows.
+          </div>
+        }
+
+        <div class="mb-4 flex flex-wrap gap-4 text-sm">
+          <label class="flex items-center gap-2">
+            <input type="checkbox" [checked]="filterInvalid()" (change)="filterInvalid.set($any($event.target).checked)" />
+            Show invalid only
+          </label>
+          <label class="flex items-center gap-2">
+            <input type="checkbox" [checked]="filterDuplicate()" (change)="filterDuplicate.set($any($event.target).checked)" />
+            Show duplicates only
+          </label>
+        </div>
+
+        @if (stagingLoading()) {
+          <app-loading-spinner message="Loading preview rows…" />
+        } @else {
+          <div class="overflow-x-auto rounded-xl border border-slate-200">
+            <table class="min-w-full divide-y divide-slate-200 text-sm">
+              <thead class="bg-slate-50 text-left text-xs font-semibold uppercase text-slate-600">
+                <tr>
+                  <th class="px-3 py-3">College</th>
+                  <th class="px-3 py-3">Branch</th>
+                  <th class="px-3 py-3">Category</th>
+                  <th class="px-3 py-3">Gender</th>
+                  <th class="px-3 py-3">Closing rank</th>
+                  <th class="px-3 py-3">Status</th>
+                  <th class="px-3 py-3"></th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 bg-white">
+                @for (row of filteredRows(); track row.id) {
+                  <tr [class.bg-red-50]="!row.valid" [class.bg-amber-50]="row.duplicate && row.valid">
+                    <td class="px-3 py-2">
+                      <div class="font-medium">{{ row.collegeCode }}</div>
+                      <div class="text-xs text-slate-500">{{ row.collegeName }}</div>
+                    </td>
+                    <td class="px-3 py-2">
+                      <div class="font-medium">{{ row.branchCode }}</div>
+                      <div class="text-xs text-slate-500">{{ row.branchName }}</div>
+                    </td>
+                    <td class="px-3 py-2">{{ row.category }}</td>
+                    <td class="px-3 py-2">{{ row.gender }}</td>
+                    <td class="px-3 py-2">{{ row.closingRank | number }}</td>
+                    <td class="px-3 py-2">
+                      @if (!row.valid) {
+                        <span class="text-red-700">{{ row.errorMessage ?? 'Invalid' }}</span>
+                      } @else if (row.duplicate) {
+                        <span class="text-amber-700">Duplicate</span>
+                      } @else {
+                        <span class="text-emerald-700">OK</span>
+                      }
+                    </td>
+                    <td class="px-3 py-2">
+                      <button
+                        mat-button
+                        type="button"
+                        color="warn"
+                        class="!min-w-0 !px-2"
+                        (click)="deleteRow(row)"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="7" class="px-3 py-8 text-center text-slate-500">No rows on this page.</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          <div class="mt-4 flex items-center justify-between text-sm text-slate-600">
+            <span>
+              Page {{ stagingPage() + 1 }} of {{ stagingTotalPages() || 1 }} ({{ stagingTotalElements() | number }}
+              rows)
+            </span>
+            <div class="flex gap-2">
+              <button mat-stroked-button type="button" [disabled]="stagingPage() === 0" (click)="prevPage()">
+                Previous
+              </button>
+              <button
+                mat-stroked-button
+                type="button"
+                [disabled]="stagingPage() + 1 >= stagingTotalPages()"
+                (click)="nextPage()"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        }
+      </section>
+    }
+  }
+</div>

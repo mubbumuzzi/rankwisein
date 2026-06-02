@@ -1,0 +1,921 @@
+Build a production-ready web application called RankWise.
+
+# ====================================================
+PROJECT VISION
+
+RankWise is a personalized TS EAMCET counselling platform.
+
+Students enter
+
+- Rank
+- Category
+- Gender
+- Preferred Branches
+
+The system analyzes historical cutoff data and returns
+
+1. Dream Colleges
+2. Target Colleges
+3. Safe Colleges
+
+The goal is not just cutoff lookup.
+
+The goal is to help students make better counselling decisions.
+
+# ====================================================
+TECH STACK
+
+Frontend
+
+- Angular 20
+- TypeScript
+- Tailwind CSS
+- Angular Material
+
+Backend
+
+- Spring Boot 3
+- Java 21
+- Maven
+
+Database
+
+- PostgreSQL
+
+Authentication
+
+- Spring Security
+- JWT
+
+Documentation
+
+- Swagger OpenAPI
+
+Deployment
+
+- Docker
+- Docker Compose
+
+# ====================================================
+BRANDING
+
+Name
+RankWise
+
+Tagline
+Your Rank. Your Right College.
+
+Theme
+
+Primary
+#0F172A
+
+Accent
+#F97316
+
+Modern educational startup design.
+
+Mobile-first responsive UI.
+
+# ====================================================
+DATABASE DESIGN
+
+Table college
+
+id
+code
+name
+location
+district
+autonomous
+website
+created_at
+
+---
+
+Table branch
+
+id
+code
+name
+created_at
+
+Examples
+
+CSE
+AIML
+IT
+ECE
+EEE
+MECH
+CIVIL
+
+---
+
+Table college_branch
+
+id
+college_id
+branch_id
+intake
+created_at
+
+---
+
+Table cutoff
+
+id
+year
+phase
+
+college_id
+branch_id
+
+category
+gender
+
+closing_rank
+
+created_at
+
+---
+
+Table student_search
+
+id
+
+rank
+
+category
+
+gender
+
+preferred_branches
+
+ip_address
+
+created_at
+
+---
+
+Table admin_user
+
+id
+username
+email
+password
+role
+created_at
+
+---
+
+Table import_file
+
+id
+
+file_name
+
+file_path
+
+year
+
+phase
+
+status
+
+records_imported
+
+import_duration
+
+uploaded_at
+
+---
+
+Table import_log
+
+id
+
+import_file_id
+
+message
+
+created_at
+
+# ====================================================
+USER FLOW
+
+Student visits website.
+
+Landing Page
+
+↓
+
+Clicks
+
+Check My Colleges
+
+↓
+
+Fills form
+
+Rank
+
+Category
+
+OC
+BC-A
+BC-B
+BC-C
+BC-D
+BC-E
+SC
+ST
+
+Gender
+
+Male
+Female
+
+Preferred Branches
+
+Multiple Selection
+
+CSE
+AIML
+IT
+ECE
+EEE
+MECH
+CIVIL
+
+↓
+
+Submit
+
+↓
+
+Get Recommendations
+
+# ====================================================
+RECOMMENDATION ENGINE
+
+Student Input
+
+Rank
+Category
+Gender
+Preferred Branches
+
+Search matching cutoff records.
+
+Logic
+
+ratio = studentRank  closingRank
+
+Dream
+
+ratio = 0.90
+
+Target
+
+ratio  0.90
+AND
+ratio = 1.10
+
+Safe
+
+ratio  1.10
+
+Sort By
+
+1. Preferred Branch Match
+2. Closing Rank
+3. College Name
+
+Return
+
+Top Dream Colleges
+
+Top Target Colleges
+
+Top Safe Colleges
+
+# ====================================================
+SEARCH ENGINE
+
+Create optimized SQL search.
+
+Filter By
+
+Category
+
+Gender
+
+Branch
+
+Year
+
+Phase
+
+Use indexes
+
+(category)
+
+(gender)
+
+(branch_id)
+
+(closing_rank)
+
+(year)
+
+(college_id)
+
+Search should return results in milliseconds.
+
+# ====================================================
+LANDING PAGE
+
+Hero Section
+
+Headline
+
+Get Personalized TS EAMCET College Recommendations
+
+Subheading
+
+Find Safe, Target and Dream Colleges based on your rank.
+
+CTA
+
+Check My Colleges
+
+---
+
+Features
+
+Rank-Based Analysis
+
+Dream Colleges
+
+Target Colleges
+
+Safe Colleges
+
+Latest Cutoff Data
+
+Branch Recommendations
+
+---
+
+How It Works
+
+1. Enter Rank
+2. Select Category
+3. Select Branches
+4. Get Recommendations
+
+# ====================================================
+RESULT PAGE
+
+Sections
+
+Dream Colleges
+
+Target Colleges
+
+Safe Colleges
+
+Each Card Shows
+
+College Name
+
+Branch
+
+Previous Closing Rank
+
+Category
+
+Year
+
+Phase
+
+Recommendation Badge
+
+# ====================================================
+ADMIN PANEL
+
+Protected via JWT.
+
+Admin Login
+
+Dashboard Metrics
+
+Total Colleges
+
+Total Branches
+
+Total Cutoff Records
+
+Total Student Searches
+
+Latest Imports
+
+# ====================================================
+PDF IMPORT SYSTEM
+
+IMPORTANT
+
+All TG EAPCET cutoff PDFs follow the same structure.
+
+DO NOT USE
+
+- AI Parsing
+- OCR
+- LLM Parsing
+
+Build a deterministic parser.
+
+# ====================================================
+PDF IMPORT FLOW
+
+Step 1
+
+Admin Uploads PDF
+
+Supported
+
+2023
+
+2024
+
+2025
+
+2026
+
+---
+
+Step 2
+
+Admin Selects
+
+Year
+
+Phase
+
+Phase 1
+
+Phase 2
+
+Final Phase
+
+---
+
+Step 3
+
+Extract PDF Text
+
+Using
+
+Apache PDFBox
+
+---
+
+Step 4
+
+Identify Valid Data Rows
+
+Ignore
+
+Page Numbers
+
+Headers
+
+Footers
+
+Repeated Column Headers
+
+# ====================================================
+TG EAPCET PDF STRUCTURE
+
+Institute Code
+
+Institute Name
+
+Branch Code
+
+Branch Name
+
+OC_BOYS
+OC_GIRLS
+
+BC_A_BOYS
+BC_A_GIRLS
+
+BC_B_BOYS
+BC_B_GIRLS
+
+BC_C_BOYS
+BC_C_GIRLS
+
+BC_D_BOYS
+BC_D_GIRLS
+
+BC_E_BOYS
+BC_E_GIRLS
+
+SC_I_BOYS
+SC_I_GIRLS
+
+SC_II_BOYS
+SC_II_GIRLS
+
+SC_III_BOYS
+SC_III_GIRLS
+
+ST_BOYS
+ST_GIRLS
+
+EWS_BOYS
+EWS_GIRLS
+
+# ====================================================
+NORMALIZATION LOGIC
+
+PDF Row Example
+
+BVRI
+
+CSE
+
+6208
+
+7150
+
+19762
+
+...
+
+Convert Into
+
+BVRI
+CSE
+OC
+BOYS
+6208
+
+BVRI
+CSE
+OC
+GIRLS
+7150
+
+BVRI
+CSE
+BC_A
+BOYS
+19762
+
+...
+
+Every categorygender combination becomes one row.
+
+Store in cutoff table.
+
+# ====================================================
+IMPORT PREVIEW SCREEN
+
+Before saving
+
+Show preview table.
+
+Columns
+
+College Code
+
+College Name
+
+Branch
+
+Category
+
+Gender
+
+Closing Rank
+
+Year
+
+Phase
+
+Allow
+
+Search
+
+Filter
+
+Delete Row
+
+Approve Import
+
+# ====================================================
+VALIDATION RULES
+
+Detect
+
+Missing College Code
+
+Missing Branch Code
+
+Invalid Rank
+
+Negative Rank
+
+Duplicate Record
+
+Duplicate Definition
+
+year
+
+phase
+
+college
+
+branch
+
+category
+
+gender
+
+already exists
+
+# ====================================================
+IMPORT PERFORMANCE
+
+Use
+
+JdbcTemplate Batch Insert
+
+Batch Size
+
+1000
+
+Target
+
+100,000+ records imported in under 30 seconds.
+
+# ====================================================
+IMPORT SUMMARY
+
+After import show
+
+Total Records Imported
+
+Duplicates Skipped
+
+Import Duration
+
+Colleges Imported
+
+Branches Imported
+
+# ====================================================
+COLLEGE MANAGEMENT
+
+Admin Can
+
+Add College
+
+Edit College
+
+Delete College
+
+Search College
+
+Filter College
+
+# ====================================================
+BRANCH MANAGEMENT
+
+Admin Can
+
+Add Branch
+
+Edit Branch
+
+Delete Branch
+
+# ====================================================
+CUTOFF MANAGEMENT
+
+Admin Can
+
+Search Cutoffs
+
+Filter By
+
+Year
+
+Phase
+
+Category
+
+Branch
+
+College
+
+Edit Cutoff
+
+Delete Cutoff
+
+# ====================================================
+API ENDPOINTS
+
+POST
+
+apipredict
+
+---
+
+POST
+
+apiadminlogin
+
+---
+
+POST
+
+apiadminupload-pdf
+
+---
+
+GET
+
+apiadmincolleges
+
+POST
+
+apiadmincolleges
+
+PUT
+
+apiadmincolleges{id}
+
+DELETE
+
+apiadmincolleges{id}
+
+---
+
+GET
+
+apiadmincutoffs
+
+POST
+
+apiadmincutoffs
+
+PUT
+
+apiadmincutoffs{id}
+
+DELETE
+
+apiadmincutoffs{id}
+
+# ====================================================
+SEED DATA
+
+Insert Sample Colleges
+
+CBIT
+
+VNR VJIET
+
+GRIET
+
+CVR
+
+MGIT
+
+SNIST
+
+MREC
+
+CMR
+
+MLRIT
+
+VJIT
+
+BVRIT
+
+Include
+
+Branches
+
+Multiple Categories
+
+Sample Cutoff Data
+
+# ====================================================
+CODE QUALITY
+
+Use Clean Architecture.
+
+Separate
+
+Controller
+
+Service
+
+Repository
+
+DTO
+
+Mapper
+
+Entity
+
+Validation
+
+Exception Handling
+
+Security
+
+# ====================================================
+REQUIRED FEATURES
+
+Spring Security
+
+JWT
+
+Swagger
+
+Flyway
+
+MapStruct
+
+Lombok
+
+Global Exception Handling
+
+Audit Logging
+
+Pagination
+
+Search APIs
+
+CSV Export
+
+Docker
+
+Docker Compose
+
+Responsive UI
+
+Loading States
+
+Error Handling
+
+# ====================================================
+DELIVERABLE
+
+Generate a complete working codebase.
+
+Include
+
+Angular Frontend
+
+Spring Boot Backend
+
+PostgreSQL Schema
+
+Flyway Migrations
+
+JWT Security
+
+Recommendation Engine
+
+Admin Dashboard
+
+TG EAPCET PDF Parser
+
+Import Preview Screen
+
+Search APIs
+
+Docker Setup
+
+Seed Data
+
+Swagger Documentation
+
+Run Instructions
+
+The application should run locally with
+
+docker-compose up
+
+without requiring additional configuration.
+
+hi

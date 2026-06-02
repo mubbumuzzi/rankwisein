@@ -1,0 +1,37 @@
+<div class="mx-auto max-w-md px-4 py-16 sm:px-6">
+  <div class="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+    <h1 class="text-2xl font-bold text-rw-primary">Admin Login</h1>
+    <p class="mt-2 text-sm text-slate-600">Sign in to upload TG EAPCET cutoff PDFs.</p>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" class="mt-8 space-y-4">
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Username</mat-label>
+        <input matInput formControlName="username" autocomplete="username" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Password</mat-label>
+        <input matInput type="password" formControlName="password" autocomplete="current-password" />
+      </mat-form-field>
+
+      @if (errorMessage()) {
+        <p class="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
+          {{ errorMessage() }}
+        </p>
+      }
+
+      <button
+        mat-flat-button
+        type="submit"
+        class="!h-11 !w-full !rounded-xl !bg-rw-accent !font-semibold"
+        [disabled]="submitting()"
+      >
+        {{ submitting() ? 'Signing in…' : 'Sign in' }}
+      </button>
+    </form>
+
+    <p class="mt-6 text-center text-sm text-slate-500">
+      <a routerLink="/" class="text-rw-accent hover:underline">← Back to student site</a>
+    </p>
+  </div>
+</div>

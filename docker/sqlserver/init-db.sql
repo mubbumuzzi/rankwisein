@@ -1,0 +1,5 @@
+IF DB_ID(N'rankwise') IS NULL
+BEGIN
+    CREATE DATABASE rankwise;
+END
+GO

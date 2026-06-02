@@ -1,0 +1,98 @@
+@if (result(); as r) {
+  <div class="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+    <div class="mb-10 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+      <h1 class="text-3xl font-bold text-rw-primary">Your recommendations</h1>
+      <p class="mt-2 text-slate-600">
+        Rank <strong>{{ r.rank | number }}</strong> · {{ r.category }} ·
+        {{ genderLabel(r.gender) }} · {{ r.year }} · {{ formatPhase(r.phase) }}
+      </p>
+      @if (form(); as f) {
+        @if ((f.preferredBranches?.length ?? 0) > 0) {
+          <p class="mt-2 text-sm text-slate-500">
+            Preferred branches:
+            <span class="font-semibold text-slate-700">{{
+              f.preferredBranches.map(branchLabel).join(', ')
+            }}</span>
+          </p>
+        }
+      }
+      <p class="mt-1 text-sm text-slate-500">{{ totalCount() }} colleges matched your criteria</p>
+      <div class="mt-6 flex flex-wrap gap-3">
+        <a
+          routerLink="/check"
+          class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-rw-primary hover:bg-slate-50"
+          >← New search</a
+        >
+      </div>
+    </div>
+
+    <section class="mb-12">
+      <div class="mb-4 flex items-center gap-3">
+        <h2 class="text-2xl font-bold text-violet-800">Dream Colleges</h2>
+        <span class="rounded-full bg-violet-100 px-3 py-1 text-sm font-semibold text-violet-800">{{
+          r.dream.length
+        }}</span>
+      </div>
+      <p class="mb-6 text-sm text-slate-600">
+        More competitive options — lower historical closing ranks (reach / stretch).
+      </p>
+      @if (r.dream.length === 0) {
+        <p class="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-slate-500">
+          No dream colleges found for this combination. Try more branches or adjust your rank.
+        </p>
+      } @else {
+        <div class="grid gap-4 lg:grid-cols-2">
+          @for (c of r.dream; track trackByCollege($index, c)) {
+            <app-college-card [college]="c" />
+          }
+        </div>
+      }
+    </section>
+
+    <section class="mb-12">
+      <div class="mb-4 flex items-center gap-3">
+        <h2 class="text-2xl font-bold text-sky-800">Target Colleges</h2>
+        <span class="rounded-full bg-sky-100 px-3 py-1 text-sm font-semibold text-sky-800">{{
+          r.target.length
+        }}</span>
+      </div>
+      <p class="mb-6 text-sm text-slate-600">
+        Balanced matches — closing ranks closest to your rank.
+      </p>
+      @if (r.target.length === 0) {
+        <p class="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-slate-500">
+          No target colleges found.
+        </p>
+      } @else {
+        <div class="grid gap-4 lg:grid-cols-2">
+          @for (c of r.target; track trackByCollege($index, c)) {
+            <app-college-card [college]="c" />
+          }
+        </div>
+      }
+    </section>
+
+    <section class="mb-12">
+      <div class="mb-4 flex items-center gap-3">
+        <h2 class="text-2xl font-bold text-emerald-800">Safe Colleges</h2>
+        <span class="rounded-full bg-emerald-100 px-3 py-1 text-sm font-semibold text-emerald-800">{{
+          r.safe.length
+        }}</span>
+      </div>
+      <p class="mb-6 text-sm text-slate-600">
+        Backup options — higher closing ranks where your rank has a comfortable margin.
+      </p>
+      @if (r.safe.length === 0) {
+        <p class="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-slate-500">
+          No safe colleges found.
+        </p>
+      } @else {
+        <div class="grid gap-4 lg:grid-cols-2">
+          @for (c of r.safe; track trackByCollege($index, c)) {
+            <app-college-card [college]="c" />
+          }
+        </div>
+      }
+    </section>
+  </div>
+}

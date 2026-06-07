@@ -4,7 +4,8 @@ import {
   FOUNDER_BIO,
   FOUNDER_CREDIT,
   FOUNDER_LINKEDIN_URL,
-  WHATSAPP_COMMUNITY_URL,
+  WHATSAPP_DISPLAY,
+  WHATSAPP_URL,
 } from '../../core/constants/site.constants';
 
 @Component({
@@ -41,14 +42,15 @@ import {
         target="_blank"
         rel="noopener noreferrer"
         class="mt-8 inline-flex rounded-xl bg-emerald-600 px-8 py-3 font-semibold text-white hover:bg-emerald-700"
-        >Join WhatsApp Community</a
+        >WhatsApp us at {{ whatsappDisplay }}</a
       >
       <a routerLink="/" class="mt-6 block text-sm font-semibold text-rw-accent hover:underline">← Back to home</a>
     </div>
   `,
 })
 export class AboutComponent {
-  readonly whatsappUrl = WHATSAPP_COMMUNITY_URL;
+  readonly whatsappUrl = WHATSAPP_URL;
+  readonly whatsappDisplay = WHATSAPP_DISPLAY;
   readonly builderCredit = FOUNDER_CREDIT;
   readonly founderBio = FOUNDER_BIO;
   readonly linkedinUrl = FOUNDER_LINKEDIN_URL;

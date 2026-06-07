@@ -7,7 +7,8 @@ import {
   FOUNDER_CREDIT,
   FOUNDER_LINKEDIN_URL,
   INSTAGRAM_URL,
-  WHATSAPP_COMMUNITY_URL,
+  WHATSAPP_DISPLAY,
+  WHATSAPP_URL,
 } from '../../core/constants/site.constants';
 
 @Component({
@@ -20,7 +21,8 @@ export class LandingComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
 
-  readonly whatsappCommunityUrl = WHATSAPP_COMMUNITY_URL;
+  readonly whatsappUrl = WHATSAPP_URL;
+  readonly whatsappDisplay = WHATSAPP_DISPLAY;
   readonly instagramUrl = INSTAGRAM_URL;
   readonly builderCredit = FOUNDER_CREDIT;
   readonly builderBio = FOUNDER_BIO;
@@ -29,10 +31,10 @@ export class LandingComponent implements OnInit {
   readonly trustItems = [
     'Previous Year Cutoff Analysis',
     'Safe, Target & Dream Colleges',
-    'Free Counselling Community',
+    'Personalized WhatsApp Counselling',
   ];
 
-  readonly communityBenefits = [
+  readonly counsellingBenefits = [
     'Counselling Updates',
     'Certificate Verification Guidance',
     'Web Options Support',
@@ -57,9 +59,9 @@ export class LandingComponent implements OnInit {
     },
     {
       step: 4,
-      title: 'Join Community For Guidance',
+      title: 'Get Personalized Guidance',
       icon: '💬',
-      description: 'Get help on WhatsApp through counselling season.',
+      description: 'Message us on WhatsApp for one-on-one counselling help.',
     },
   ];
 
@@ -69,7 +71,7 @@ export class LandingComponent implements OnInit {
     { title: 'College Predictor', icon: '🎯', description: 'Rank-based Dream, Target & Safe shortlists.' },
     { title: 'Branch Analysis', icon: '🔬', description: 'Filter by CSE, ECE, IT, and more.' },
     { title: 'Counselling Guidance', icon: '🧭', description: 'Step-by-step support on WhatsApp.' },
-    { title: 'WhatsApp Community', icon: '👥', description: 'Free updates and peer support.' },
+    { title: 'Personalized WhatsApp Help', icon: '💬', description: 'Direct counselling support on WhatsApp.' },
     { title: 'Previous Year Cutoff Analysis', icon: '📅', description: 'Official TG EAPCET cutoff data.' },
     { title: 'College Comparison', icon: '⚖️', description: 'Compare options by closing rank.' },
   ];

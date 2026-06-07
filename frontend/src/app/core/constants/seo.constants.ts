@@ -54,9 +54,9 @@ export const FAQ_ITEMS: { question: string; answer: string }[] = [
       'Dream colleges are ambitious choices where the closing rank is better than yours. Target colleges are realistic matches near your rank. Safe colleges are backup options where your rank comfortably meets previous cutoffs.',
   },
   {
-    question: 'How can I join the RankWise community?',
+    question: 'How can I get personalized counselling from RankWise?',
     answer:
-      'Join our free WhatsApp community for TG EAPCET counselling updates, web options help, certificate guidance, branch selection tips, and seat allotment updates throughout admission season.',
+      'WhatsApp us at 8121871508 for one-on-one TG EAPCET counselling help — web options, certificate guidance, branch selection tips, and seat allotment updates throughout admission season.',
   },
   {
     question: 'How does TG EAPCET counselling work?',

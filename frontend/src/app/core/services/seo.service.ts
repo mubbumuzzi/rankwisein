@@ -5,7 +5,7 @@ import { NavigationEnd, Router } from '@angular/router';
 import { filter } from 'rxjs';
 import {
   CONTACT_EMAIL,
-  WHATSAPP_COMMUNITY_URL,
+  WHATSAPP_URL,
 } from '../constants/site.constants';
 import {
   FAQ_ITEMS,
@@ -101,7 +101,7 @@ export class SeoService {
           'TG EAPCET and TS EAMCET college predictor with safe, target and dream college recommendations for Telangana engineering admissions.',
         email: CONTACT_EMAIL,
         areaServed: { '@type': 'State', name: 'Telangana' },
-        sameAs: [WHATSAPP_COMMUNITY_URL],
+        sameAs: [WHATSAPP_URL],
       },
       {
         '@context': 'https://schema.org',
@@ -109,7 +109,7 @@ export class SeoService {
         name: SITE_NAME,
         url: SITE_URL,
         description:
-          'Free TG EAPCET 2026 college predictor and counselling community for Telangana engineering admissions.',
+          'Free TG EAPCET 2026 college predictor and personalized WhatsApp counselling for Telangana engineering admissions.',
         publisher: { '@type': 'Organization', name: SITE_NAME },
         potentialAction: {
           '@type': 'SearchAction',

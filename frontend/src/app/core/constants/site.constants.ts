@@ -1,13 +1,20 @@
-export const WHATSAPP_PHONE = '919505922694';
+export const WHATSAPP_PHONE = '918121871508';
 
-/** Official RankWise WhatsApp community group invite */
-export const WHATSAPP_COMMUNITY_URL =
-  'https://chat.whatsapp.com/BLaEeDiXU2VBfT4HjUNoTc';
+/** Display format for UI (without country code). */
+export const WHATSAPP_DISPLAY = '8121871508';
 
-export const WHATSAPP_COUNSELING_URL =
-  'https://wa.me/919505922694?text=Hi%20RankWise%2C%20I%20need%20detailed%20TG%20EAPCET%20counselling%20guidance.';
+/** Direct WhatsApp chat for personalized TG EAPCET counselling. */
+export const WHATSAPP_URL =
+  'https://wa.me/918121871508?text=Hi%20RankWise%2C%20I%20need%20personalized%20TG%20EAPCET%20counselling%20guidance.';
+
+/** @deprecated Use WHATSAPP_URL — kept for existing imports during migration. */
+export const WHATSAPP_COMMUNITY_URL = WHATSAPP_URL;
+
+export const WHATSAPP_COUNSELING_URL = WHATSAPP_URL;
 
 export const INSTAGRAM_URL = 'https://www.instagram.com/rankwise.co.in';
+
+export const RANKWISE_LINKEDIN_URL = 'https://www.linkedin.com/company/rankwisets/';
 
 export const CONTACT_EMAIL = 'rankwise.help@gmail.com';
 

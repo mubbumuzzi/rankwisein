@@ -10,7 +10,7 @@ import {
 import { FormsModule } from '@angular/forms';
 import { NavigationEnd, Router } from '@angular/router';
 import { filter, firstValueFrom, Subscription } from 'rxjs';
-import { WHATSAPP_COMMUNITY_URL, WHATSAPP_COUNSELING_URL } from '../../../core/constants/site.constants';
+import { WHATSAPP_DISPLAY, WHATSAPP_URL } from '../../../core/constants/site.constants';
 import { ChatMessage, StudentProfile } from '../../../core/models/ai-counsellor.models';
 import { AiCounsellorService } from '../../../core/services/ai-counsellor.service';
 import { CheckCollegesLauncherService } from '../../../core/services/check-colleges-launcher.service';
@@ -48,8 +48,8 @@ export class CounsellingChatbotComponent implements OnInit, OnDestroy {
   pBranches: string[] = [];
   private routerSub?: Subscription;
 
-  readonly whatsappCommunity = WHATSAPP_COMMUNITY_URL;
-  readonly whatsappCounselor = WHATSAPP_COUNSELING_URL;
+  readonly whatsappUrl = WHATSAPP_URL;
+  readonly whatsappDisplay = WHATSAPP_DISPLAY;
 
   readonly categories = ['OC', 'BC-A', 'BC-B', 'BC-C', 'BC-D', 'BC-E', 'SC-I', 'SC-II', 'SC-III', 'ST', 'EWS'];
   readonly genders = [
@@ -213,12 +213,10 @@ export class CounsellingChatbotComponent implements OnInit, OnDestroy {
     this.pBranches = [...set];
   }
 
-  trackWhatsapp(type: 'community' | 'counselor'): void {
+  trackWhatsapp(): void {
     if (!this.sessionId) return;
-    const event =
-      type === 'community' ? 'WHATSAPP_COMMUNITY_CLICK' : 'WHATSAPP_COUNSELOR_CLICK';
-    this.ai.trackEvent(this.sessionId, event).subscribe();
-    window.open(type === 'community' ? this.whatsappCommunity : this.whatsappCounselor, '_blank', 'noopener,noreferrer');
+    this.ai.trackEvent(this.sessionId, 'WHATSAPP_COUNSELOR_CLICK').subscribe();
+    window.open(this.whatsappUrl, '_blank', 'noopener,noreferrer');
   }
 
   toggleProfile(): void {

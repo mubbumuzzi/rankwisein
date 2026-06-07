@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { WHATSAPP_COMMUNITY_URL } from '../../../core/constants/site.constants';
+import { WHATSAPP_DISPLAY, WHATSAPP_URL } from '../../../core/constants/site.constants';
 
 @Component({
   selector: 'app-whatsapp-sticky-cta',
@@ -9,7 +9,7 @@ import { WHATSAPP_COMMUNITY_URL } from '../../../core/constants/site.constants';
     >
       <div class="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 sm:flex-row">
         <p class="text-center text-sm font-medium text-rw-primary sm:text-left">
-          Need detailed guidance? Join our free WhatsApp community
+          Need personalized counselling? WhatsApp us at {{ whatsappDisplay }}
         </p>
         <a
           [href]="whatsappUrl"
@@ -17,7 +17,7 @@ import { WHATSAPP_COMMUNITY_URL } from '../../../core/constants/site.constants';
           rel="noopener noreferrer"
           class="inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 text-sm font-bold text-white shadow-md transition hover:bg-emerald-700 sm:w-auto"
         >
-          Join WhatsApp Community
+          WhatsApp · {{ whatsappDisplay }}
         </a>
       </div>
     </div>
@@ -25,5 +25,6 @@ import { WHATSAPP_COMMUNITY_URL } from '../../../core/constants/site.constants';
   `,
 })
 export class WhatsappStickyCtaComponent {
-  readonly whatsappUrl = WHATSAPP_COMMUNITY_URL;
+  readonly whatsappUrl = WHATSAPP_URL;
+  readonly whatsappDisplay = WHATSAPP_DISPLAY;
 }

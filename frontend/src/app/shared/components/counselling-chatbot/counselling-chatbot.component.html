@@ -138,11 +138,8 @@
           <div class="border-t border-emerald-100 bg-emerald-50 px-3 py-3 text-center">
             <p class="text-xs font-bold text-emerald-900">Need personalized counselling?</p>
             <div class="mt-2 flex flex-wrap justify-center gap-2">
-              <button type="button" (click)="trackWhatsapp('community')" class="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white">
-                Join WhatsApp
-              </button>
-              <button type="button" (click)="trackWhatsapp('counselor')" class="rounded-lg border border-emerald-600 px-3 py-1.5 text-xs font-bold text-emerald-700">
-                Talk to counsellor
+              <button type="button" (click)="trackWhatsapp()" class="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white">
+                WhatsApp · {{ whatsappDisplay }}
               </button>
               <button type="button" (click)="openChecker()" class="rounded-lg border border-rw-accent px-3 py-1.5 text-xs font-bold text-rw-accent">
                 Full college checker

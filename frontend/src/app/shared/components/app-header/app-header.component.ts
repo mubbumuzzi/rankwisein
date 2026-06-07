@@ -1,9 +1,6 @@
 import { Component, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
-import {
-  INSTAGRAM_URL,
-  WHATSAPP_COMMUNITY_URL,
-} from '../../../core/constants/site.constants';
+import { INSTAGRAM_URL } from '../../../core/constants/site.constants';
 
 @Component({
   selector: 'app-header',
@@ -47,13 +44,6 @@ import {
             routerLink="/admin/login"
             class="hidden rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 lg:inline-block"
             >Admin</a
-          >
-          <a
-            [href]="whatsappUrl"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="hidden rounded-lg px-2 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-50 lg:inline-flex lg:items-center lg:px-3"
-            >Community</a
           >
           <a
             routerLink="/"
@@ -108,13 +98,6 @@ import {
             >Instagram</a
           >
           <a
-            [href]="whatsappUrl"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="block rounded-lg px-3 py-2.5 text-sm font-semibold text-emerald-700 hover:bg-emerald-50"
-            >Community</a
-          >
-          <a
             routerLink="/admin/login"
             class="block rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
             >Admin</a
@@ -125,7 +108,6 @@ import {
   `,
 })
 export class AppHeaderComponent {
-  readonly whatsappUrl = WHATSAPP_COMMUNITY_URL;
   readonly instagramUrl = INSTAGRAM_URL;
   readonly menuOpen = signal(false);
 

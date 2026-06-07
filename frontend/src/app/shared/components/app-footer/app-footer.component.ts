@@ -2,9 +2,10 @@ import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import {
   CONTACT_EMAIL,
-  FOUNDER_LINKEDIN_URL,
   INSTAGRAM_URL,
-  WHATSAPP_COMMUNITY_URL,
+  RANKWISE_LINKEDIN_URL,
+  WHATSAPP_DISPLAY,
+  WHATSAPP_URL,
 } from '../../../core/constants/site.constants';
 
 @Component({
@@ -39,7 +40,7 @@ import {
             <ul class="mt-4 space-y-2 text-sm">
               <li>
                 <a [href]="whatsappUrl" target="_blank" rel="noopener noreferrer" class="hover:text-white"
-                  >WhatsApp Community</a
+                  >WhatsApp · {{ whatsappDisplay }}</a
                 >
               </li>
               <li>
@@ -74,9 +75,10 @@ import {
 })
 export class AppFooterComponent {
   readonly year = new Date().getFullYear();
-  readonly whatsappUrl = WHATSAPP_COMMUNITY_URL;
+  readonly whatsappUrl = WHATSAPP_URL;
+  readonly whatsappDisplay = WHATSAPP_DISPLAY;
   readonly instagramUrl = INSTAGRAM_URL;
-  readonly linkedinUrl = FOUNDER_LINKEDIN_URL;
+  readonly linkedinUrl = RANKWISE_LINKEDIN_URL;
   readonly contactEmail = CONTACT_EMAIL;
   readonly emailHref = `mailto:${CONTACT_EMAIL}`;
 }

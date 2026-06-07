@@ -29,12 +29,12 @@
         College Cutoff Lookup
       </a>
       <a
-        [href]="whatsappCommunityUrl"
+        [href]="whatsappUrl"
         target="_blank"
         rel="noopener noreferrer"
         class="inline-flex items-center gap-2 rounded-xl border border-emerald-400/50 bg-emerald-500/15 px-8 py-4 text-base font-semibold text-white transition hover:bg-emerald-500/25"
       >
-        Join Free WhatsApp Community
+        WhatsApp us · {{ whatsappDisplay }}
       </a>
     </div>
     <ul class="mt-8 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:gap-x-6">
@@ -48,18 +48,18 @@
   </div>
 </section>
 
-<!-- Community -->
-<section id="community" class="border-b border-slate-200 bg-white">
+<!-- Personalized counselling -->
+<section id="counselling" class="border-b border-slate-200 bg-white">
   <div class="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
     <div class="mx-auto max-w-2xl text-center">
-      <h2 class="text-3xl font-bold text-rw-primary sm:text-4xl">Join Our Counselling Community</h2>
+      <h2 class="text-3xl font-bold text-rw-primary sm:text-4xl">Personalized Counselling on WhatsApp</h2>
       <p class="mt-4 text-slate-600">
-        Free WhatsApp group for TG EAPCET counselling updates and guidance from engineering students and
-        counselors.
+        Message us directly for one-on-one TG EAPCET counselling help — web options, certificates, branch
+        selection, and seat allotment guidance.
       </p>
     </div>
     <ul class="mx-auto mt-10 grid max-w-3xl gap-3 sm:grid-cols-2">
-      @for (b of communityBenefits; track b) {
+      @for (b of counsellingBenefits; track b) {
         <li
           class="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-rw-primary"
         >
@@ -70,12 +70,12 @@
     </ul>
     <div class="mt-10 text-center">
       <a
-        [href]="whatsappCommunityUrl"
+        [href]="whatsappUrl"
         target="_blank"
         rel="noopener noreferrer"
         class="inline-flex items-center gap-3 rounded-xl bg-emerald-600 px-10 py-4 text-lg font-bold text-white shadow-lg shadow-emerald-600/30 transition hover:bg-emerald-700"
       >
-        Join WhatsApp Community
+        WhatsApp us at {{ whatsappDisplay }}
       </a>
     </div>
   </div>
@@ -109,12 +109,12 @@
         Check My Colleges
       </button>
       <a
-        [href]="whatsappCommunityUrl"
+        [href]="whatsappUrl"
         target="_blank"
         rel="noopener noreferrer"
         class="rounded-xl border border-emerald-600 px-8 py-3 font-semibold text-emerald-700 hover:bg-emerald-50"
       >
-        Join WhatsApp Community
+        WhatsApp · {{ whatsappDisplay }}
       </a>
     </div>
   </div>

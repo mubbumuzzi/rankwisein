@@ -10,7 +10,8 @@ import {
 import { FormsModule } from '@angular/forms';
 import { NavigationEnd, Router } from '@angular/router';
 import { filter, firstValueFrom, Subscription } from 'rxjs';
-import { WHATSAPP_CTA_LABEL, WHATSAPP_URL } from '../../../core/constants/site.constants';
+import { WHATSAPP_CTA_LABEL } from '../../../core/constants/site.constants';
+import { WhatsappCounsellingLinkService } from '../../../core/services/whatsapp-counselling-link.service';
 import { ChatMessage, StudentProfile } from '../../../core/models/ai-counsellor.models';
 import { AiCounsellorService } from '../../../core/services/ai-counsellor.service';
 import { CheckCollegesLauncherService } from '../../../core/services/check-colleges-launcher.service';
@@ -25,6 +26,7 @@ export class CounsellingChatbotComponent implements OnInit, OnDestroy {
   private readonly ai = inject(AiCounsellorService);
   private readonly launcher = inject(CheckCollegesLauncherService);
   private readonly router = inject(Router);
+  private readonly whatsappLink = inject(WhatsappCounsellingLinkService);
 
   @ViewChild('scrollHost') private scrollHost?: ElementRef<HTMLElement>;
 
@@ -48,7 +50,6 @@ export class CounsellingChatbotComponent implements OnInit, OnDestroy {
   pBranches: string[] = [];
   private routerSub?: Subscription;
 
-  readonly whatsappUrl = WHATSAPP_URL;
   readonly whatsappCtaLabel = WHATSAPP_CTA_LABEL;
 
   readonly categories = ['OC', 'BC-A', 'BC-B', 'BC-C', 'BC-D', 'BC-E', 'SC-I', 'SC-II', 'SC-III', 'ST', 'EWS'];
@@ -216,7 +217,7 @@ export class CounsellingChatbotComponent implements OnInit, OnDestroy {
   trackWhatsapp(): void {
     if (!this.sessionId) return;
     this.ai.trackEvent(this.sessionId, 'WHATSAPP_COUNSELOR_CLICK').subscribe();
-    window.open(this.whatsappUrl, '_blank', 'noopener,noreferrer');
+    window.open(this.whatsappLink.url(), '_blank', 'noopener,noreferrer');
   }
 
   toggleProfile(): void {

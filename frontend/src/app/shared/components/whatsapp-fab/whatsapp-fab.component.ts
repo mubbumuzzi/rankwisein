@@ -1,14 +1,15 @@
 import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
 import { filter, Subscription } from 'rxjs';
-import { WHATSAPP_CTA_LABEL, WHATSAPP_URL } from '../../../core/constants/site.constants';
+import { WHATSAPP_CTA_LABEL } from '../../../core/constants/site.constants';
+import { WhatsappCounsellingLinkService } from '../../../core/services/whatsapp-counselling-link.service';
 
 @Component({
   selector: 'app-whatsapp-fab',
   template: `
     @if (visible()) {
       <a
-        [href]="whatsappUrl"
+        [href]="whatsappUrl()"
         target="_blank"
         rel="noopener noreferrer"
         [class]="positionClass()"
@@ -27,9 +28,10 @@ import { WHATSAPP_CTA_LABEL, WHATSAPP_URL } from '../../../core/constants/site.c
 })
 export class WhatsappFabComponent implements OnInit, OnDestroy {
   private readonly router = inject(Router);
+  private readonly whatsappLink = inject(WhatsappCounsellingLinkService);
 
   readonly visible = signal(true);
-  readonly whatsappUrl = WHATSAPP_URL;
+  readonly whatsappUrl = this.whatsappLink.url;
   readonly whatsappCtaLabel = WHATSAPP_CTA_LABEL;
 
   private routerSub?: Subscription;

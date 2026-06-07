@@ -1,6 +1,7 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CheckCollegesLauncherService } from '../../core/services/check-colleges-launcher.service';
+import { WhatsappCounsellingLinkService } from '../../core/services/whatsapp-counselling-link.service';
 import { FAQ_ITEMS } from '../../core/constants/seo.constants';
 import {
   FOUNDER_BIO,
@@ -8,7 +9,6 @@ import {
   FOUNDER_LINKEDIN_URL,
   INSTAGRAM_URL,
   WHATSAPP_CTA_LABEL,
-  WHATSAPP_URL,
 } from '../../core/constants/site.constants';
 
 @Component({
@@ -21,7 +21,9 @@ export class LandingComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
 
-  readonly whatsappUrl = WHATSAPP_URL;
+  private readonly whatsappLink = inject(WhatsappCounsellingLinkService);
+
+  readonly whatsappUrl = this.whatsappLink.url;
   readonly whatsappCtaLabel = WHATSAPP_CTA_LABEL;
   readonly instagramUrl = INSTAGRAM_URL;
   readonly builderCredit = FOUNDER_CREDIT;

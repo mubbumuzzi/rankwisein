@@ -1,12 +1,12 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import {
   FOUNDER_BIO,
   FOUNDER_CREDIT,
   FOUNDER_LINKEDIN_URL,
   WHATSAPP_CTA_LABEL,
-  WHATSAPP_URL,
 } from '../../core/constants/site.constants';
+import { WhatsappCounsellingLinkService } from '../../core/services/whatsapp-counselling-link.service';
 
 @Component({
   selector: 'app-about',
@@ -38,7 +38,7 @@ import {
         >
       </div>
       <a
-        [href]="whatsappUrl"
+        [href]="whatsappUrl()"
         target="_blank"
         rel="noopener noreferrer"
         class="mt-8 inline-flex rounded-xl bg-emerald-600 px-8 py-3 font-semibold text-white hover:bg-emerald-700"
@@ -49,7 +49,9 @@ import {
   `,
 })
 export class AboutComponent {
-  readonly whatsappUrl = WHATSAPP_URL;
+  private readonly whatsappLink = inject(WhatsappCounsellingLinkService);
+
+  readonly whatsappUrl = this.whatsappLink.url;
   readonly whatsappCtaLabel = WHATSAPP_CTA_LABEL;
   readonly builderCredit = FOUNDER_CREDIT;
   readonly founderBio = FOUNDER_BIO;

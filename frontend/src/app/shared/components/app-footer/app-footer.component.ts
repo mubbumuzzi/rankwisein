@@ -1,12 +1,12 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import {
   CONTACT_EMAIL,
   INSTAGRAM_URL,
   RANKWISE_LINKEDIN_URL,
   WHATSAPP_CTA_LABEL,
-  WHATSAPP_URL,
 } from '../../../core/constants/site.constants';
+import { WhatsappCounsellingLinkService } from '../../../core/services/whatsapp-counselling-link.service';
 
 @Component({
   selector: 'app-footer',
@@ -39,7 +39,7 @@ import {
             <p class="text-sm font-semibold uppercase tracking-wider text-slate-400">Connect</p>
             <ul class="mt-4 space-y-2 text-sm">
               <li>
-                <a [href]="whatsappUrl" target="_blank" rel="noopener noreferrer" class="hover:text-white"
+                <a [href]="whatsappUrl()" target="_blank" rel="noopener noreferrer" class="hover:text-white"
                   >{{ whatsappCtaLabel }}</a
                 >
               </li>
@@ -74,8 +74,10 @@ import {
   `,
 })
 export class AppFooterComponent {
+  private readonly whatsappLink = inject(WhatsappCounsellingLinkService);
+
   readonly year = new Date().getFullYear();
-  readonly whatsappUrl = WHATSAPP_URL;
+  readonly whatsappUrl = this.whatsappLink.url;
   readonly whatsappCtaLabel = WHATSAPP_CTA_LABEL;
   readonly instagramUrl = INSTAGRAM_URL;
   readonly linkedinUrl = RANKWISE_LINKEDIN_URL;

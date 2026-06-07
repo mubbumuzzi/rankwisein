@@ -1,6 +1,6 @@
-import { Component, OnInit, inject } from '@angular/core';
-import { buildWhatsAppUrl, WHATSAPP_CTA_LABEL, WHATSAPP_URL } from '../../../core/constants/site.constants';
-import { PredictStateService } from '../../../core/services/predict-state.service';
+import { Component, inject } from '@angular/core';
+import { WHATSAPP_CTA_LABEL } from '../../../core/constants/site.constants';
+import { WhatsappCounsellingLinkService } from '../../../core/services/whatsapp-counselling-link.service';
 
 @Component({
   selector: 'app-whatsapp-sticky-cta',
@@ -13,7 +13,7 @@ import { PredictStateService } from '../../../core/services/predict-state.servic
           Need one-on-one help with web options, branches, or seat allotment?
         </p>
         <a
-          [href]="whatsappUrl"
+          [href]="whatsappUrl()"
           target="_blank"
           rel="noopener noreferrer"
           class="inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 text-sm font-bold text-white shadow-md transition hover:bg-emerald-700 sm:w-auto"
@@ -25,20 +25,9 @@ import { PredictStateService } from '../../../core/services/predict-state.servic
     <div class="h-24 sm:h-20" aria-hidden="true"></div>
   `,
 })
-export class WhatsappStickyCtaComponent implements OnInit {
-  private readonly predictState = inject(PredictStateService);
+export class WhatsappStickyCtaComponent {
+  private readonly whatsappLink = inject(WhatsappCounsellingLinkService);
 
-  whatsappUrl = WHATSAPP_URL;
+  readonly whatsappUrl = this.whatsappLink.url;
   readonly whatsappCtaLabel = WHATSAPP_CTA_LABEL;
-
-  ngOnInit(): void {
-    const form = this.predictState.lastForm();
-    if (!form) return;
-
-    const branches = form.preferredBranches?.length ? form.preferredBranches.join(', ') : '—';
-    this.whatsappUrl = buildWhatsAppUrl(
-      `Hi RankWise! I checked my college list on the site and need personalized counselling.\n` +
-        `Rank: ${form.rank}\nCategory: ${form.category}\nGender: ${form.gender}\nBranches: ${branches}`,
-    );
-  }
 }

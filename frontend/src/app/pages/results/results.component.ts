@@ -4,8 +4,8 @@ import { Router, RouterLink } from '@angular/router';
 import { PredictStateService } from '../../core/services/predict-state.service';
 import { CollegeCardComponent } from '../../shared/components/college-card/college-card.component';
 import { WhatsappStickyCtaComponent } from '../../shared/components/whatsapp-sticky-cta/whatsapp-sticky-cta.component';
-import { buildWhatsAppUrl, WHATSAPP_URL } from '../../core/constants/site.constants';
 import { CollegeRecommendation, PredictResponse } from '../../core/models/predict.models';
+import { WhatsappCounsellingLinkService } from '../../core/services/whatsapp-counselling-link.service';
 
 @Component({
   selector: 'app-results',
@@ -15,10 +15,11 @@ import { CollegeRecommendation, PredictResponse } from '../../core/models/predic
 export class ResultsComponent implements OnInit {
   private readonly state = inject(PredictStateService);
   private readonly router = inject(Router);
+  private readonly whatsappLink = inject(WhatsappCounsellingLinkService);
 
   readonly result = signal<PredictResponse | null>(null);
   readonly form = signal<{ preferredBranches: string[] } | null>(null);
-  whatsappUrl = WHATSAPP_URL;
+  readonly whatsappUrl = this.whatsappLink.url;
   readonly totalCount = computed(() => {
     const r = this.result();
     if (!r) return 0;
@@ -34,13 +35,6 @@ export class ResultsComponent implements OnInit {
     }
     this.result.set(r);
     this.form.set(f ? { preferredBranches: f.preferredBranches ?? [] } : null);
-    if (f) {
-      const branches = f.preferredBranches?.length ? f.preferredBranches.join(', ') : '—';
-      this.whatsappUrl = buildWhatsAppUrl(
-        `Hi RankWise! I checked my college list on the site and need personalized counselling.\n` +
-          `Rank: ${f.rank}\nCategory: ${f.category}\nGender: ${f.gender}\nBranches: ${branches}`,
-      );
-    }
   }
 
   genderLabel(g: string): string {

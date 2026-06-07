@@ -45,6 +45,7 @@ export class AdminImportComponent implements OnInit {
   readonly phase = signal('PHASE_1');
 
   readonly uploading = signal(false);
+  readonly uploadProgress = signal<string | null>(null);
   readonly approving = signal(false);
   readonly approveProgress = signal<string | null>(null);
   readonly errorMessage = signal<string | null>(null);
@@ -97,6 +98,7 @@ export class AdminImportComponent implements OnInit {
     }
 
     this.uploading.set(true);
+    this.uploadProgress.set('Uploading PDF…');
     this.errorMessage.set(null);
     this.successMessage.set(null);
     this.approveResult.set(null);
@@ -104,18 +106,29 @@ export class AdminImportComponent implements OnInit {
     this.importService.uploadPdf(file, this.year(), this.phase()).subscribe({
       next: (res) => {
         this.uploadResult.set(res);
-        this.uploading.set(false);
-        this.successMessage.set(
-          `Parsed ${res.totalParsed} rows — ${res.validRows} valid, ${res.duplicateRows} duplicates, ${res.invalidRows} invalid.`
-        );
-        this.purgeResult.set(null);
-        this.loadStaging(0);
+        if (res.status === 'PARSING') {
+          this.uploadProgress.set('Parsing PDF on server…');
+          this.pollImportStatus(res.importId, 0, 'upload');
+          return;
+        }
+        this.finishUpload(res);
       },
       error: (e) => {
         this.uploading.set(false);
+        this.uploadProgress.set(null);
         this.errorMessage.set(e.message ?? 'Upload failed');
       },
     });
+  }
+
+  private finishUpload(res: ImportUploadResponse): void {
+    this.uploading.set(false);
+    this.uploadProgress.set(null);
+    this.successMessage.set(
+      `Parsed ${res.totalParsed} rows — ${res.validRows} valid, ${res.duplicateRows} duplicates, ${res.invalidRows} invalid.`,
+    );
+    this.purgeResult.set(null);
+    this.loadStaging(0);
   }
 
   loadStaging(page: number): void {
@@ -174,7 +187,7 @@ export class AdminImportComponent implements OnInit {
       next: (res) => {
         if (res.status === 'IMPORTING') {
           this.uploadResult.update((u) => (u ? { ...u, status: 'IMPORTING' } : u));
-          this.pollImportStatus(importId);
+          this.pollImportStatus(importId, 0, 'approve');
           return;
         }
         this.finishApprove(res);
@@ -192,47 +205,88 @@ export class AdminImportComponent implements OnInit {
     });
   }
 
-  private pollImportStatus(importId: number, attempt = 0): void {
+  private pollImportStatus(importId: number, attempt = 0, phase: 'upload' | 'approve' = 'approve'): void {
     if (attempt > 600) {
-      this.approving.set(false);
-      this.approveProgress.set(null);
-      this.errorMessage.set(
-        'Import is taking longer than expected. Refresh the page — if status stays IMPORTING, reset via server and try again.',
-      );
+      if (phase === 'upload') {
+        this.uploading.set(false);
+        this.uploadProgress.set(null);
+        this.errorMessage.set(
+          'PDF parsing is taking longer than expected. Refresh the page and check import status.',
+        );
+      } else {
+        this.approving.set(false);
+        this.approveProgress.set(null);
+        this.errorMessage.set(
+          'Import is taking longer than expected. Refresh the page — if status stays IMPORTING, reset via server and try again.',
+        );
+      }
       return;
     }
 
     this.importService.getImportStatus(importId).subscribe({
       next: (res) => {
-        if (res.status === 'IMPORTING') {
-          this.approveProgress.set(`Importing cutoffs… (${Math.max(1, attempt + 1)}s)`);
-          setTimeout(() => this.pollImportStatus(importId, attempt + 1), 1000);
+        if (res.status === 'PARSING') {
+          this.uploadProgress.set(`Parsing PDF on server… (${Math.max(1, attempt + 1)}s)`);
+          setTimeout(() => this.pollImportStatus(importId, attempt + 1, 'upload'), 1000);
           return;
         }
-        if (res.status === 'FAILED') {
+        if (res.status === 'STAGED' && phase === 'upload') {
+          this.uploadResult.set({
+            importId: res.importId,
+            status: res.status,
+            year: res.year,
+            phase: res.phase,
+            totalParsed: res.totalParsed,
+            validRows: res.validRows,
+            duplicateRows: res.duplicateRows,
+            invalidRows: res.invalidRows,
+          });
+          this.finishUpload(this.uploadResult()!);
+          return;
+        }
+        if (res.status === 'FAILED' && phase === 'upload') {
+          this.uploading.set(false);
+          this.uploadProgress.set(null);
+          this.errorMessage.set('PDF parsing failed on the server. Check backend logs.');
+          this.uploadResult.update((u) => (u ? { ...u, status: 'FAILED' } : u));
+          return;
+        }
+        if (res.status === 'IMPORTING') {
+          this.approveProgress.set(`Importing cutoffs… (${Math.max(1, attempt + 1)}s)`);
+          setTimeout(() => this.pollImportStatus(importId, attempt + 1, 'approve'), 1000);
+          return;
+        }
+        if (res.status === 'FAILED' && phase === 'approve') {
           this.approving.set(false);
           this.approveProgress.set(null);
           this.errorMessage.set('Import failed on the server. Check admin import logs.');
           this.uploadResult.update((u) => (u ? { ...u, status: 'FAILED' } : u));
           return;
         }
-        this.finishApprove(res);
+        if (phase === 'approve') {
+          this.finishApprove(res);
+        }
       },
       error: (e) => {
-        this.approving.set(false);
-        this.approveProgress.set(null);
+        if (phase === 'upload') {
+          this.uploading.set(false);
+          this.uploadProgress.set(null);
+        } else {
+          this.approving.set(false);
+          this.approveProgress.set(null);
+        }
         this.errorMessage.set(e.message ?? 'Failed to check import status');
       },
     });
   }
 
   private finishApprove(res: ApproveImportResponse | ImportStatusResponse): void {
-    this.approveResult.set(res);
+    this.approveResult.set(res as ApproveImportResponse);
     this.approving.set(false);
     this.approveProgress.set(null);
     this.uploadResult.update((u) => (u ? { ...u, status: res.status } : u));
     this.successMessage.set(
-      `Import complete — ${res.inserted} inserted, ${res.skippedDuplicates} duplicates skipped in ${res.durationMs}ms.`
+      `Import complete — ${res.inserted} inserted, ${'duplicateRows' in res ? res.duplicateRows : res.skippedDuplicates} duplicates skipped in ${res.durationMs}ms.`,
     );
   }
 

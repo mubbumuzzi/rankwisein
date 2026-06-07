@@ -45,6 +45,7 @@ public class PdfImportService {
     private final BranchRepository branchRepository;
     private final JdbcTemplate jdbcTemplate;
     private final ImportApproveAsyncService approveAsyncService;
+    private final ImportParseAsyncService parseAsyncService;
 
     private final TgEapcetPdfParser parser = new TgEapcetPdfParser();
 
@@ -55,7 +56,8 @@ public class PdfImportService {
                             CollegeRepository collegeRepository,
                             BranchRepository branchRepository,
                             JdbcTemplate jdbcTemplate,
-                            @Lazy ImportApproveAsyncService approveAsyncService) {
+                            @Lazy ImportApproveAsyncService approveAsyncService,
+                            @Lazy ImportParseAsyncService parseAsyncService) {
         this.props = props;
         this.importFileRepository = importFileRepository;
         this.stagingRepository = stagingRepository;
@@ -64,6 +66,7 @@ public class PdfImportService {
         this.branchRepository = branchRepository;
         this.jdbcTemplate = jdbcTemplate;
         this.approveAsyncService = approveAsyncService;
+        this.parseAsyncService = parseAsyncService;
     }
 
     @Transactional
@@ -94,12 +97,38 @@ public class PdfImportService {
         importFile.setFilePath(stored.toString());
         importFile.setStatus("PARSING");
         importFileRepository.save(importFile);
+        log(importFile.getId(), "PARSE queued (async)");
 
+        Long importId = importFile.getId();
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                parseAsyncService.runParse(importId);
+            }
+        });
+
+        return new ImportUploadResponse(importId, "PARSING", year, normalizedPhase, 0, 0, 0, 0);
+    }
+
+    @Transactional
+    public void executeParse(Long importId) {
+        ImportFile importFile = importFileRepository.findById(importId)
+                .orElseThrow(() -> new ImportException("Import not found: " + importId));
+        if (!"PARSING".equals(importFile.getStatus())) {
+            logger.warn("executeParse skipped import {} — status is {}", importId, importFile.getStatus());
+            return;
+        }
+
+        int year = importFile.getYear();
+        String normalizedPhase = importFile.getPhase();
+        Path stored = Path.of(importFile.getFilePath());
         Instant start = Instant.now();
         int total = 0;
         int valid = 0;
         int duplicates = 0;
         int invalid = 0;
+
+        logger.info("executeParse started for import {}", importId);
 
         try (InputStream in = Files.newInputStream(stored)) {
             TgEapcetPdfParser.ParseResult parsed = parser.parse(in);
@@ -107,9 +136,16 @@ public class PdfImportService {
             List<String> pdfColumns = parsed.columns();
             total = rows.size() * pdfColumns.size();
 
+            Set<String> existingCutoffs = loadExistingCutoffKeys(year, normalizedPhase);
+            Map<String, College> collegeCache = new HashMap<>();
+            Map<String, Branch> branchCache = new HashMap<>();
+            List<ImportStagingRow> stagingBatch = new ArrayList<>(512);
+
             for (ParsedWideRow wide : rows) {
-                College college = findOrCreateCollege(wide.collegeCode(), wide.collegeName(), wide.collegeLocation());
-                Branch branch = findOrCreateBranch(wide.branchCode(), wide.branchName());
+                College college = collegeCache.computeIfAbsent(wide.collegeCode(),
+                        code -> findOrCreateCollege(code, wide.collegeName(), wide.collegeLocation()));
+                Branch branch = branchCache.computeIfAbsent(wide.branchCode(),
+                        code -> findOrCreateBranch(code, wide.branchName()));
 
                 for (int i = 0; i < pdfColumns.size(); i++) {
                     String col = pdfColumns.get(i);
@@ -138,30 +174,36 @@ public class PdfImportService {
                         staging.setValid(false);
                         staging.setErrorMessage(error);
                         invalid++;
-                    } else if (isDuplicate(year, normalizedPhase, college.getId(), branch.getId(), norm.category, norm.gender)) {
+                    } else if (existingCutoffs.contains(cutoffKey(college.getId(), branch.getId(), norm.category, norm.gender))) {
                         staging.setDuplicate(true);
                         duplicates++;
-                        valid++; // still valid, but duplicate
+                        valid++;
                     } else {
                         valid++;
                     }
-                    stagingRepository.save(staging);
+                    stagingBatch.add(staging);
+                    if (stagingBatch.size() >= 500) {
+                        stagingRepository.saveAll(stagingBatch);
+                        stagingBatch.clear();
+                    }
                 }
+            }
+            if (!stagingBatch.isEmpty()) {
+                stagingRepository.saveAll(stagingBatch);
             }
 
             importFile.setStatus("STAGED");
             importFile.setImportDuration(Duration.between(start, Instant.now()).toMillis());
             importFileRepository.save(importFile);
             log(importFile.getId(), "Parsed and staged rows. total=" + total + " valid=" + valid + " dup=" + duplicates + " invalid=" + invalid);
+            logger.info("executeParse finished import {} — total={} valid={}", importId, total, valid);
         } catch (Exception e) {
             importFile.setStatus("FAILED");
             importFile.setImportDuration(Duration.between(start, Instant.now()).toMillis());
             importFileRepository.save(importFile);
-            log(importFile.getId(), "FAILED: " + e.getMessage());
-            throw e instanceof ImportException ? (ImportException) e : new ImportException("Import failed: " + e.getMessage(), e);
+            log(importFile.getId(), "FAILED during parse: " + e.getMessage());
+            logger.error("executeParse failed for import {}", importId, e);
         }
-
-        return new ImportUploadResponse(importFile.getId(), importFile.getStatus(), year, normalizedPhase, total, valid, duplicates, invalid);
     }
 
     @Transactional(readOnly = true)
@@ -317,14 +359,40 @@ public class PdfImportService {
     }
 
     private ImportStatusResponse toStatusResponse(ImportFile importFile, StagingCounts counts) {
+        StagingStats stats = stagingStats(importFile.getId());
         return new ImportStatusResponse(
                 importFile.getId(),
                 importFile.getStatus(),
+                importFile.getYear(),
+                importFile.getPhase(),
+                stats.totalParsed(),
+                stats.validRows(),
+                stats.duplicateRows(),
+                stats.invalidRows(),
                 importFile.getRecordsImported() != null ? importFile.getRecordsImported() : 0,
-                counts.skippedDuplicates(),
-                counts.invalidRows(),
                 importFile.getImportDuration() != null ? importFile.getImportDuration() : 0
         );
+    }
+
+    private StagingStats stagingStats(Long importId) {
+        Map<String, Object> row = jdbcTemplate.queryForMap("""
+                SELECT
+                  COUNT(*) AS total_cnt,
+                  COALESCE(SUM(CASE WHEN valid = 1 THEN 1 ELSE 0 END), 0) AS valid_cnt,
+                  COALESCE(SUM(CASE WHEN valid = 0 THEN 1 ELSE 0 END), 0) AS invalid_cnt,
+                  COALESCE(SUM(CASE WHEN valid = 1 AND is_duplicate = 1 THEN 1 ELSE 0 END), 0) AS dup_cnt
+                FROM import_staging_row
+                WHERE import_file_id = ?
+                """, importId);
+        return new StagingStats(
+                ((Number) row.get("total_cnt")).intValue(),
+                ((Number) row.get("valid_cnt")).intValue(),
+                ((Number) row.get("dup_cnt")).intValue(),
+                ((Number) row.get("invalid_cnt")).intValue()
+        );
+    }
+
+    private record StagingStats(int totalParsed, int validRows, int duplicateRows, int invalidRows) {
     }
 
     private record StagingCounts(int invalidRows, int skippedDuplicates) {
@@ -521,13 +589,25 @@ public class PdfImportService {
         return null;
     }
 
-    private boolean isDuplicate(int year, String phase, Long collegeId, Long branchId, String category, String gender) {
-        List<Integer> rows = jdbcTemplate.query(
-                "SELECT TOP 1 1 FROM cutoff WHERE [year]=? AND phase=? AND college_id=? AND branch_id=? AND category=? AND gender=?",
-                (rs, i) -> rs.getInt(1),
-                year, phase, collegeId, branchId, category, gender
-        );
-        return !rows.isEmpty();
+    private Set<String> loadExistingCutoffKeys(int year, String phase) {
+        List<Map<String, Object>> rows = jdbcTemplate.queryForList("""
+                SELECT college_id, branch_id, category, gender
+                FROM cutoff
+                WHERE [year] = ? AND phase = ?
+                """, year, phase);
+        Set<String> keys = new HashSet<>(rows.size() * 2);
+        for (Map<String, Object> row : rows) {
+            keys.add(cutoffKey(
+                    ((Number) row.get("college_id")).longValue(),
+                    ((Number) row.get("branch_id")).longValue(),
+                    (String) row.get("category"),
+                    (String) row.get("gender")));
+        }
+        return keys;
+    }
+
+    private static String cutoffKey(Long collegeId, Long branchId, String category, String gender) {
+        return collegeId + "|" + branchId + "|" + category + "|" + gender;
     }
 }
 

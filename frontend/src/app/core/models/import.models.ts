@@ -33,7 +33,18 @@ export interface ApproveImportResponse {
   durationMs: number;
 }
 
-export type ImportStatusResponse = ApproveImportResponse;
+export interface ImportStatusResponse {
+  importId: number;
+  status: string;
+  year: number;
+  phase: string;
+  totalParsed: number;
+  validRows: number;
+  duplicateRows: number;
+  invalidRows: number;
+  inserted: number;
+  durationMs: number;
+}
 
 export interface PurgeCutoffsResponse {
   year: number;

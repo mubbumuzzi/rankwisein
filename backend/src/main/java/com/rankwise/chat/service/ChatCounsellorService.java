@@ -7,8 +7,13 @@ import com.rankwise.chat.entity.FaqArticle;
 import com.rankwise.chat.entity.StudentProfile;
 import com.rankwise.config.AppProperties;
 import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -17,6 +22,7 @@ import java.util.List;
 @Service
 public class ChatCounsellorService {
 
+    private static final Logger logger = LoggerFactory.getLogger(ChatCounsellorService.class);
     private static final DateTimeFormatter ISO = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
     private final ChatSessionService sessionService;
@@ -27,6 +33,7 @@ public class ChatCounsellorService {
     private final CursorAgentService cursorAgentService;
     private final ChatAnalyticsService analyticsService;
     private final AppProperties props;
+    private final ChatReplyAsyncService replyAsyncService;
 
     public ChatCounsellorService(ChatSessionService sessionService,
                                  ChatSafetyService safetyService,
@@ -35,7 +42,8 @@ public class ChatCounsellorService {
                                  ChatCollegeContextService collegeContext,
                                  CursorAgentService cursorAgentService,
                                  ChatAnalyticsService analyticsService,
-                                 AppProperties props) {
+                                 AppProperties props,
+                                 @Lazy ChatReplyAsyncService replyAsyncService) {
         this.sessionService = sessionService;
         this.safetyService = safetyService;
         this.rateLimitService = rateLimitService;
@@ -44,6 +52,7 @@ public class ChatCounsellorService {
         this.cursorAgentService = cursorAgentService;
         this.analyticsService = analyticsService;
         this.props = props;
+        this.replyAsyncService = replyAsyncService;
     }
 
     @Transactional
@@ -71,8 +80,48 @@ public class ChatCounsellorService {
             UpdateProfileRequest rankUpdate = new UpdateProfileRequest(
                     intent.detectedRank, null, null, null, null, null);
             sessionService.updateProfile(sessionId, visitorToken, rankUpdate);
-            profile = sessionService.loadProfile(session.getChatUserId());
         }
+
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                replyAsyncService.runReply(sessionId, content);
+            }
+        });
+
+        return new ChatMessageResponse(
+                null,
+                ChatMessage.ROLE_ASSISTANT,
+                "",
+                null,
+                null,
+                List.of(),
+                false,
+                List.of(),
+                true
+        );
+    }
+
+    @Transactional
+    public void executeReply(Long sessionId, String content) {
+        try {
+            executeReplyInternal(sessionId, content);
+        } catch (Exception e) {
+            logger.error("executeReply failed for session {}", sessionId, e);
+            sessionService.saveAssistantMessage(
+                    sessionId,
+                    "Sorry, something went wrong while preparing your answer. Please try again.",
+                    null,
+                    null,
+                    null,
+                    null);
+        }
+    }
+
+    private void executeReplyInternal(Long sessionId, String content) {
+        ChatSession session = sessionService.getSessionEntity(sessionId);
+        StudentProfile profile = sessionService.loadProfile(session.getChatUserId());
+        ChatIntentDetector.DetectedIntent intent = ChatIntentDetector.detect(content, profile);
 
         List<String> missing = ChatIntentDetector.missingProfileFields(profile);
         ChatStructuredPayload structured = null;
@@ -116,39 +165,35 @@ public class ChatCounsellorService {
         Integer completionTokens = null;
 
         if (cursorAgentService.isConfigured()) {
-            String existingAgentId = session.getCursorAgentId();
-            String prompt = existingAgentId == null || existingAgentId.isBlank()
-                    ? CursorAgentService.formatTurns(turns)
-                    : CursorAgentService.formatFollowUp(contextBlock, content);
+            try {
+                String existingAgentId = session.getCursorAgentId();
+                String prompt = existingAgentId == null || existingAgentId.isBlank()
+                        ? CursorAgentService.formatTurns(turns)
+                        : CursorAgentService.formatFollowUp(contextBlock, content);
 
-            CursorAgentService.AgentCompletionResult result = cursorAgentService.complete(existingAgentId, prompt);
-            assistantText = result.content();
-            model = result.model();
-            if (existingAgentId == null || existingAgentId.isBlank()) {
-                sessionService.updateCursorAgentId(sessionId, result.agentId());
+                CursorAgentService.AgentCompletionResult result = cursorAgentService.complete(existingAgentId, prompt);
+                assistantText = result.content();
+                model = result.model();
+                if (existingAgentId == null || existingAgentId.isBlank()) {
+                    sessionService.updateCursorAgentId(sessionId, result.agentId());
+                }
+            } catch (ChatException e) {
+                logger.warn("Cursor reply failed for session {} — using fallback: {}", sessionId, e.getMessage());
+                assistantText = fallbackReply(intent, missing, structured);
             }
         } else {
             assistantText = fallbackReply(intent, missing, structured);
         }
 
-        ChatMessage saved = sessionService.saveAssistantMessage(
+        sessionService.saveAssistantMessage(
                 sessionId, assistantText, structured, model, promptTokens, completionTokens);
 
-        boolean showLeadCta = session.getMessageCount() >= props.getChat().getLeadCtaAfterMessages() && !session.isLeadCtaShown();
-        if (showLeadCta) {
+        session = sessionService.getSessionEntity(sessionId);
+        if (session.getMessageCount() >= props.getChat().getLeadCtaAfterMessages() && !session.isLeadCtaShown()) {
             sessionService.markLeadCtaShown(sessionId);
         }
 
-        return new ChatMessageResponse(
-                saved.getId(),
-                saved.getRole(),
-                saved.getContent(),
-                structured,
-                saved.getCreatedAt().format(ISO),
-                ChatPromptBuilder.defaultSuggestedQuestions(),
-                showLeadCta,
-                missing
-        );
+        logger.info("Async chat reply finished for session {}", sessionId);
     }
 
     private List<CursorAgentService.ChatTurn> buildTurns(Long sessionId, String contextBlock, String userMessage) {
@@ -177,7 +222,7 @@ public class ChatCounsellorService {
         if (intent.wantsCounsellingGuide) {
             return "TG EAPCET counselling: certificate verification → web options by rank → seat allotment in phases. Please verify dates on the official portal.";
         }
-        return "RankWise AI Counsellor is connecting. Please set CURSOR_API_KEY for full AI responses, or use suggested questions below.";
+        return "I can help with TG EAPCET counselling, college prediction, and branch selection. Share your rank and category, or tap a suggested question below.";
     }
 
     private static String clientIp(HttpServletRequest req) {

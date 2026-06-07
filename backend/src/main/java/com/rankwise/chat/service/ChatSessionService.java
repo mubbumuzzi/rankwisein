@@ -215,8 +215,15 @@ public class ChatSessionService {
                 m.getCreatedAt().format(ISO),
                 List.of(),
                 false,
-                List.of()
+                List.of(),
+                false
         );
+    }
+
+    @Transactional(readOnly = true)
+    public ChatSession getSessionEntity(Long sessionId) {
+        return sessionRepository.findById(sessionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Session not found"));
     }
 
     SessionResponse toSessionResponse(ChatSession session, ChatUser user, StudentProfile profile) {

@@ -10,6 +10,7 @@ public record ChatMessageResponse(
         String createdAt,
         List<String> suggestedQuestions,
         boolean showLeadCta,
-        List<String> missingProfileFields
+        List<String> missingProfileFields,
+        boolean pending
 ) {
 }

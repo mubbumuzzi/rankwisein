@@ -107,6 +107,8 @@ export class CounsellingChatbotComponent implements OnInit, OnDestroy {
       this.ai.storeSessionId(created.sessionId);
       const msgs = await firstValueFrom(this.ai.listMessages(created.sessionId));
       this.messages.set(msgs);
+    } catch {
+      this.errorMessage.set('Could not start chat. Please refresh the page and try again.');
     } finally {
       this.loading.set(false);
       this.scrollSoon();
@@ -147,34 +149,69 @@ export class CounsellingChatbotComponent implements OnInit, OnDestroy {
     this.typing.set(true);
     this.scrollSoon();
 
+    const messageCountBefore = this.messages().length;
+
     this.ai.sendMessage(this.sessionId, text).subscribe({
       next: (reply) => {
+        if (reply.pending) {
+          this.pollForReply(this.sessionId!, messageCountBefore + 1);
+          return;
+        }
         this.typing.set(false);
         this.messages.update((m) => [...m, reply]);
-        if (reply.suggestedQuestions?.length) {
-          this.suggested.set(reply.suggestedQuestions);
-        }
-        if (reply.showLeadCta) {
-          this.showLeadCta.set(true);
-        }
-        if (reply.missingProfileFields?.length) {
-          this.showProfile.set(true);
-        }
+        this.applyReplyMeta(reply);
         this.scrollSoon();
       },
-      error: () => {
+      error: (e: { message?: string }) => {
         this.typing.set(false);
-        this.messages.update((m) => [
-          ...m,
-          {
-            id: Date.now(),
-            role: 'ASSISTANT',
-            content: 'Sorry, something went wrong. Please try again in a moment.',
-            createdAt: new Date().toISOString(),
-          },
-        ]);
+        this.messages.update((m) => m.slice(0, -1));
+        this.errorMessage.set(e.message ?? 'Sorry, something went wrong. Please try again in a moment.');
       },
     });
+  }
+
+  private pollForReply(sessionId: number, minMessages: number, attempt = 0): void {
+    if (attempt > 180) {
+      this.typing.set(false);
+      this.errorMessage.set('Reply is taking longer than expected. Please try again.');
+      return;
+    }
+
+    this.ai.listMessages(sessionId).subscribe({
+      next: (msgs) => {
+        if (msgs.length >= minMessages) {
+          const last = msgs[msgs.length - 1];
+          if (last.role === 'ASSISTANT' && last.content.trim()) {
+            this.typing.set(false);
+            this.messages.set(msgs);
+            this.applyReplyMeta(last);
+            this.scrollSoon();
+            return;
+          }
+        }
+        setTimeout(() => this.pollForReply(sessionId, minMessages, attempt + 1), 1000);
+      },
+      error: (e: { message?: string }) => {
+        this.typing.set(false);
+        this.errorMessage.set(e.message ?? 'Failed to load reply. Please try again.');
+      },
+    });
+  }
+
+  private applyReplyMeta(reply: ChatMessage): void {
+    if (reply.suggestedQuestions?.length) {
+      this.suggested.set(reply.suggestedQuestions);
+    } else {
+      this.ai.suggestedQuestions().subscribe({
+        next: (q) => this.suggested.set(q),
+      });
+    }
+    if (reply.showLeadCta) {
+      this.showLeadCta.set(true);
+    }
+    if (reply.missingProfileFields?.length) {
+      this.showProfile.set(true);
+    }
   }
 
   pickSuggestion(q: string): void {

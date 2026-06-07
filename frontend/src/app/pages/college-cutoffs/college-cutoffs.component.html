@@ -1,0 +1,202 @@
+<div class="mx-auto max-w-5xl px-4 py-10 sm:px-6">
+  <div class="mb-8 text-center">
+    <h1 class="text-3xl font-bold text-rw-primary">College Cutoff Lookup</h1>
+    <p class="mt-2 text-slate-600">
+      Select a college, category and gender to view closing ranks across all imported years and counselling
+      phases.
+    </p>
+  </div>
+
+  @if (metaLoading()) {
+    <app-loading-spinner message="Loading form options…" />
+  } @else if (meta(); as m) {
+    <form
+      [formGroup]="form"
+      (ngSubmit)="submit()"
+      class="space-y-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+    >
+      <div class="rw-field relative">
+        <label class="rw-label" for="college-query">College</label>
+        <div class="flex gap-2">
+          <input
+            id="college-query"
+            type="text"
+            formControlName="collegeQuery"
+            autocomplete="off"
+            placeholder="Type college name or code…"
+            class="rw-input flex-1"
+            (input)="onCollegeQueryInput()"
+            (focus)="showDropdown.set(searchResults().length > 0)"
+            [class.rw-input-invalid]="form.get('collegeQuery')?.invalid && form.get('collegeQuery')?.touched"
+          />
+          @if (selectedCollege()) {
+            <button
+              type="button"
+              class="rounded-lg border border-slate-200 px-3 text-sm font-medium text-slate-600 hover:bg-slate-50"
+              (click)="clearCollege()"
+            >
+              Clear
+            </button>
+          }
+        </div>
+        @if (searching()) {
+          <p class="mt-1 text-xs text-slate-500">Searching…</p>
+        }
+        @if (showDropdown() && searchResults().length > 0) {
+          <ul
+            class="absolute z-20 mt-1 max-h-60 w-full overflow-auto rounded-xl border border-slate-200 bg-white py-1 shadow-lg"
+            role="listbox"
+          >
+            @for (c of searchResults(); track c.id) {
+              <li>
+                <button
+                  type="button"
+                  class="block w-full px-4 py-2.5 text-left text-sm hover:bg-orange-50"
+                  (click)="selectCollege(c)"
+                >
+                  <span class="font-semibold text-rw-primary">{{ c.name }}</span>
+                  <span class="ml-2 text-slate-500">{{ c.code }}</span>
+                  @if (c.district) {
+                    <span class="block text-xs text-slate-400">{{ c.district }}</span>
+                  }
+                </button>
+              </li>
+            }
+          </ul>
+        }
+        @if (form.get('collegeQuery')?.touched && !selectedCollege()) {
+          <p class="rw-error">Select a college from the search results</p>
+        }
+      </div>
+
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div class="rw-field">
+          <label class="rw-label" for="cutoff-category">Category</label>
+          <div class="rw-select-wrap">
+            <select
+              id="cutoff-category"
+              formControlName="category"
+              class="rw-select"
+              [class.rw-input-invalid]="form.get('category')?.invalid && form.get('category')?.touched"
+            >
+              <option value="" disabled>Select</option>
+              @for (cat of m.categories; track cat) {
+                <option [value]="cat">{{ cat }}</option>
+              }
+            </select>
+            <span class="rw-select-chevron" aria-hidden="true">▼</span>
+          </div>
+          @if (form.get('category')?.hasError('required') && form.get('category')?.touched) {
+            <p class="rw-error">Select your category</p>
+          }
+        </div>
+
+        <div class="rw-field">
+          <label class="rw-label" for="cutoff-gender">Gender</label>
+          <div class="rw-select-wrap">
+            <select
+              id="cutoff-gender"
+              formControlName="gender"
+              class="rw-select"
+              [class.rw-input-invalid]="form.get('gender')?.invalid && form.get('gender')?.touched"
+            >
+              <option value="" disabled>Select</option>
+              @for (g of m.genders; track g) {
+                <option [value]="g">{{ genderLabel(g) }}</option>
+              }
+            </select>
+            <span class="rw-select-chevron" aria-hidden="true">▼</span>
+          </div>
+          @if (form.get('gender')?.hasError('required') && form.get('gender')?.touched) {
+            <p class="rw-error">Select gender</p>
+          }
+        </div>
+      </div>
+
+      @if (errorMessage()) {
+        <div
+          class="rounded-lg border px-4 py-3 text-sm"
+          [class.border-red-200]="!result()"
+          [class.bg-red-50]="!result()"
+          [class.text-red-800]="!result()"
+          [class.border-amber-200]="result()"
+          [class.bg-amber-50]="result()"
+          [class.text-amber-900]="result()"
+          role="alert"
+        >
+          {{ errorMessage() }}
+        </div>
+      }
+
+      <button
+        type="submit"
+        class="h-12 w-full rounded-xl bg-rw-accent text-base font-bold text-white shadow-sm transition hover:bg-rw-accent-hover disabled:opacity-60"
+        [disabled]="loading()"
+      >
+        @if (loading()) {
+          Loading cutoffs…
+        } @else {
+          View Cutoff Ranks
+        }
+      </button>
+    </form>
+
+    @if (result(); as r) {
+      @if (r.cutoffs.length > 0) {
+        <div class="mt-10 space-y-8">
+          <div class="rounded-xl border border-slate-200 bg-slate-50 px-5 py-4">
+            <h2 class="text-xl font-bold text-rw-primary">{{ r.college.name }}</h2>
+            <p class="mt-1 text-sm text-slate-600">
+              Code: {{ r.college.code }}
+              @if (r.college.district) {
+                · {{ r.college.district }}
+              }
+              · {{ r.category }} · {{ genderLabel(r.gender) }}
+            </p>
+          </div>
+
+          @for (table of yearTables(); track table.year) {
+            <section>
+              <h3 class="mb-3 text-lg font-bold text-rw-primary">{{ table.year }}</h3>
+              <div class="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+                <table class="min-w-full text-sm">
+                  <thead class="bg-slate-50 text-left">
+                    <tr>
+                      <th class="px-4 py-3 font-semibold text-rw-primary">Branch</th>
+                      @for (phase of table.phases; track phase) {
+                        <th class="px-4 py-3 font-semibold text-rw-primary">{{ formatPhase(phase) }}</th>
+                      }
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100">
+                    @for (row of table.rows; track row.branchCode) {
+                      <tr class="hover:bg-slate-50/80">
+                        <td class="px-4 py-3">
+                          <span class="font-semibold text-rw-primary">{{ branchLabel(row.branchCode) }}</span>
+                          <span class="block text-xs text-slate-500">{{ row.branchName }}</span>
+                        </td>
+                        @for (phase of table.phases; track phase) {
+                          <td class="px-4 py-3 font-medium tabular-nums text-slate-800">
+                            @if (row.ranks[phase] != null) {
+                              {{ row.ranks[phase] | number }}
+                            } @else {
+                              <span class="text-slate-300">—</span>
+                            }
+                          </td>
+                        }
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          }
+
+          <p class="text-center text-xs text-slate-500">
+            Closing ranks from imported TG EAPCET cutoff data. Verify on the official counselling portal.
+          </p>
+        </div>
+      }
+    }
+  }
+</div>

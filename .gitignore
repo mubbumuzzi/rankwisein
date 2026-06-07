@@ -19,5 +19,8 @@ Thumbs.db
 # Logs
 *.log
 
+# Secrets — keep on server only
+.env
+
 # Imported PDFs (runtime data)
 data/

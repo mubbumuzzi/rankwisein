@@ -1,0 +1,20 @@
+# Production overlay — use with:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+#
+# Runs 24/7 on a VPS. Only port 80 is exposed (nginx proxies /api to backend).
+# Pair with Cloudflare DNS (A record → VPS IP) instead of cloudflared tunnel.
+
+services:
+  sqlserver:
+    restart: unless-stopped
+
+  backend:
+    restart: unless-stopped
+    ports: !reset []
+    environment:
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-https://rankwise.co.in,https://www.rankwise.co.in}
+
+  frontend:
+    restart: unless-stopped
+    ports:
+      - "80:80"

@@ -8,7 +8,7 @@ A personalized TS/TG EAPCET (EAMCET) counselling platform. Students enter their 
 
 - **Frontend:** Angular 20, TypeScript, Tailwind CSS, Angular Material
 - **Backend:** Spring Boot 3, Java 21, Maven
-- **Database:** PostgreSQL + Flyway
+- **Database:** Microsoft SQL Server + Flyway
 - **Auth:** Spring Security + JWT
 - **Docs:** Swagger / OpenAPI
 - **PDF import:** Apache PDFBox (deterministic parser)
@@ -27,7 +27,21 @@ docker-compose up --build
 | Swagger   | http://localhost:8080/swagger-ui.html       |
 | Health    | http://localhost:8080/actuator/health       |
 
-The database schema and seed data (branches, sample colleges, an admin user, and sample cutoffs) are created automatically by Flyway on first start.
+The database schema and seed data are created automatically by Flyway on first start.
+
+### Production (24/7 VPS)
+
+See **[docs/DEPLOY-VPS.md](docs/DEPLOY-VPS.md)** — deploy on Hetzner/DigitalOcean/Lightsail instead of running Docker on your laptop + Cloudflare Tunnel.
+
+Quick start on a Ubuntu VPS:
+
+```bash
+git clone <repo> /opt/rankwise && cd /opt/rankwise
+cp .env.example .env && nano .env
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+```
+
+Point **rankwise.co.in** Cloudflare DNS (A record) to the VPS IP and stop `cloudflared` on your laptop.
 
 ### Default admin credentials
 

@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /results
+
+Sitemap: https://rankwise.co.in/sitemap.xml

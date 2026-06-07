@@ -23,4 +23,17 @@ public interface CutoffRepository extends JpaRepository<Cutoff, Long> {
                                    @Param("branchCodes") List<String> branchCodes,
                                    @Param("year") int year,
                                    @Param("phase") String phase);
+
+    @Query("""
+            SELECT c FROM Cutoff c
+            JOIN FETCH c.college col
+            JOIN FETCH c.branch b
+            WHERE col.id = :collegeId
+              AND c.category = :category
+              AND c.gender = :gender
+            ORDER BY c.year DESC, c.phase ASC, b.code ASC
+            """)
+    List<Cutoff> findByCollegeCategoryGender(@Param("collegeId") Long collegeId,
+                                             @Param("category") String category,
+                                             @Param("gender") String gender);
 }

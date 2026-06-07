@@ -1,5 +1,6 @@
 package com.rankwise.common.exception;
 
+import com.rankwise.chat.service.ChatException;
 import com.rankwise.common.dto.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -44,9 +45,12 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.CONFLICT, msg, req);
     }
 
-    @ExceptionHandler({ValidationException.class, ImportException.class})
+    @ExceptionHandler({ValidationException.class, ImportException.class, ChatException.class})
     public ResponseEntity<ErrorResponse> handleValidation(RuntimeException ex, HttpServletRequest req) {
-        return build(HttpStatus.BAD_REQUEST, ex.getMessage(), req);
+        HttpStatus status = ex instanceof ChatException && ex.getMessage() != null && ex.getMessage().contains("Too many")
+                ? HttpStatus.TOO_MANY_REQUESTS
+                : HttpStatus.BAD_REQUEST;
+        return build(status, ex.getMessage(), req);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

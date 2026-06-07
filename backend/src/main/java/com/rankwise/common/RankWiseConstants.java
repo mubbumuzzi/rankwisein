@@ -20,7 +20,7 @@ public final class RankWiseConstants {
 
     public static final List<String> PHASES = List.of("PHASE_1", "PHASE_2", "FINAL_PHASE");
 
-    public static final List<Integer> SUPPORTED_YEARS = List.of(2023, 2024, 2025);
+    public static final List<Integer> SUPPORTED_YEARS = List.of(2024, 2025);
 
     public static final List<String> DEFAULT_BRANCHES = List.of(
             // These are BRANCH CODES (must match what's stored in the DB / PDF import).

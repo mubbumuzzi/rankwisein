@@ -1,7 +1,10 @@
 <div class="mx-auto max-w-2xl px-4 py-10 sm:px-6">
   <div class="mb-8 text-center">
-    <h1 class="text-3xl font-bold text-rw-primary">Check My Colleges</h1>
-    <p class="mt-2 text-slate-600">Enter your details to get Dream, Target, and Safe recommendations.</p>
+    <h1 class="text-3xl font-bold text-rw-primary">TG EAPCET College Predictor</h1>
+    <p class="mt-2 text-slate-600">
+      Enter your rank to get safe, target and dream engineering colleges in Telangana from previous year cutoff
+      data.
+    </p>
   </div>
 
   @if (metaLoading()) {
@@ -12,61 +15,119 @@
       (ngSubmit)="submit()"
       class="space-y-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
     >
-      <mat-form-field appearance="outline">
-        <mat-label>Your EAMCET rank</mat-label>
-        <input matInput type="number" formControlName="rank" min="1" placeholder="e.g. 5000" />
+      <div class="rw-field">
+        <label class="rw-label" for="predict-rank">Your EAMCET rank</label>
+        <input
+          id="predict-rank"
+          type="number"
+          formControlName="rank"
+          min="1"
+          placeholder="e.g. 5000"
+          class="rw-input"
+          [class.rw-input-invalid]="form.get('rank')?.invalid && form.get('rank')?.touched"
+        />
         @if (form.get('rank')?.hasError('required') && form.get('rank')?.touched) {
-          <mat-error>Rank is required</mat-error>
+          <p class="rw-error">Rank is required</p>
         }
         @if (form.get('rank')?.hasError('min')) {
-          <mat-error>Enter a valid rank (1 or above)</mat-error>
+          <p class="rw-error">Enter a valid rank (1 or above)</p>
         }
-      </mat-form-field>
+      </div>
 
-      <mat-form-field appearance="outline">
-        <mat-label>Category</mat-label>
-        <mat-select formControlName="category">
-          @for (cat of m.categories; track cat) {
-            <mat-option [value]="cat">{{ cat }}</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
+      <div class="rw-field">
+        <label class="rw-label" for="predict-category">Category</label>
+        <div class="rw-select-wrap">
+          <select
+            id="predict-category"
+            formControlName="category"
+            class="rw-select"
+            [class.rw-input-invalid]="form.get('category')?.invalid && form.get('category')?.touched"
+          >
+            <option value="" disabled>Select</option>
+            @for (cat of m.categories; track cat) {
+              <option [value]="cat">{{ cat }}</option>
+            }
+          </select>
+          <span class="rw-select-chevron" aria-hidden="true">▼</span>
+        </div>
+        @if (form.get('category')?.hasError('required') && form.get('category')?.touched) {
+          <p class="rw-error">Select your category</p>
+        }
+      </div>
 
-      <mat-form-field appearance="outline">
-        <mat-label>Gender</mat-label>
-        <mat-select formControlName="gender">
-          @for (g of m.genders; track g) {
-            <mat-option [value]="g">{{ genderLabel(g) }}</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
+      <div class="rw-field">
+        <label class="rw-label" for="predict-gender">Gender</label>
+        <div class="rw-select-wrap">
+          <select
+            id="predict-gender"
+            formControlName="gender"
+            class="rw-select"
+            [class.rw-input-invalid]="form.get('gender')?.invalid && form.get('gender')?.touched"
+          >
+            <option value="" disabled>Select</option>
+            @for (g of m.genders; track g) {
+              <option [value]="g">{{ genderLabel(g) }}</option>
+            }
+          </select>
+          <span class="rw-select-chevron" aria-hidden="true">▼</span>
+        </div>
+        @if (form.get('gender')?.hasError('required') && form.get('gender')?.touched) {
+          <p class="rw-error">Select gender</p>
+        }
+      </div>
 
       <div class="grid gap-4 sm:grid-cols-2">
-        <mat-form-field appearance="outline">
-          <mat-label>Year</mat-label>
-          <mat-select formControlName="year">
-            @for (y of m.years; track y) {
-              <mat-option [value]="y">{{ y }}</mat-option>
-            }
-          </mat-select>
-        </mat-form-field>
+        <div class="rw-field">
+          <label class="rw-label" for="predict-year">Year</label>
+          <div class="rw-select-wrap">
+            <select
+              id="predict-year"
+              formControlName="year"
+              class="rw-select"
+              [class.rw-input-invalid]="form.get('year')?.invalid && form.get('year')?.touched"
+            >
+              <option value="" disabled>Select</option>
+              @for (y of m.years; track y) {
+                <option [value]="y">{{ y }}</option>
+              }
+            </select>
+            <span class="rw-select-chevron" aria-hidden="true">▼</span>
+          </div>
+          @if (form.get('year')?.hasError('required') && form.get('year')?.touched) {
+            <p class="rw-error">Select cutoff year</p>
+          }
+        </div>
 
-        <mat-form-field appearance="outline">
-          <mat-label>Phase</mat-label>
-          <mat-select formControlName="phase">
-            @for (p of m.phases; track p) {
-              <mat-option [value]="p">{{ p.replaceAll('_', ' ') }}</mat-option>
-            }
-          </mat-select>
-        </mat-form-field>
+        <div class="rw-field">
+          <label class="rw-label" for="predict-phase">Phase</label>
+          <div class="rw-select-wrap">
+            <select
+              id="predict-phase"
+              formControlName="phase"
+              class="rw-select"
+              [class.rw-input-invalid]="form.get('phase')?.invalid && form.get('phase')?.touched"
+            >
+              <option value="" disabled>Select</option>
+              @for (p of m.phases; track p) {
+                <option [value]="p">{{ formatPhase(p) }}</option>
+              }
+            </select>
+            <span class="rw-select-chevron" aria-hidden="true">▼</span>
+          </div>
+          @if (form.get('phase')?.hasError('required') && form.get('phase')?.touched) {
+            <p class="rw-error">Select phase</p>
+          }
+        </div>
       </div>
 
       <div>
         <div class="mb-3 flex items-center justify-between">
           <label class="text-sm font-semibold text-rw-primary">Preferred branches</label>
-          <button type="button" mat-button color="primary" (click)="selectAllBranches()">Select all</button>
+          <button type="button" class="text-sm font-semibold text-rw-accent hover:underline" (click)="selectAllBranches()">
+            Select all
+          </button>
         </div>
-        @if ((selectedBranches().length ?? 0) > 0) {
+        @if (selectedBranches().length > 0) {
           <div class="mb-3 flex flex-wrap gap-2">
             @for (code of selectedBranches(); track code) {
               <span
@@ -94,7 +155,7 @@
           }
         </div>
         @if (form.get('preferredBranches')?.touched && (form.value.preferredBranches?.length ?? 0) === 0) {
-          <p class="mt-2 text-sm text-red-600">Select at least one branch</p>
+          <p class="rw-error mt-2">Select at least one branch</p>
         }
       </div>
 
@@ -105,10 +166,8 @@
       }
 
       <button
-        mat-flat-button
-        color="primary"
         type="submit"
-        class="!h-12 !w-full !rounded-xl !bg-rw-accent !text-base !font-bold"
+        class="h-12 w-full rounded-xl bg-rw-accent text-base font-bold text-white shadow-sm transition hover:bg-rw-accent-hover disabled:opacity-60"
         [disabled]="submitting()"
       >
         @if (submitting()) {

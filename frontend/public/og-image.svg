@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="RankWise TG EAPCET College Predictor">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f172a"/>
+      <stop offset="100%" style="stop-color:#1e293b"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect x="80" y="80" width="88" height="88" rx="16" fill="#f97316"/>
+  <text x="124" y="142" text-anchor="middle" fill="#fff" font-family="Inter, Arial, sans-serif" font-size="36" font-weight="700">RW</text>
+  <text x="200" y="130" fill="#fff" font-family="Inter, Arial, sans-serif" font-size="56" font-weight="800">RankWise</text>
+  <text x="200" y="185" fill="#94a3b8" font-family="Inter, Arial, sans-serif" font-size="28">Your Rank. Your Right College.</text>
+  <text x="80" y="300" fill="#fff" font-family="Inter, Arial, sans-serif" font-size="44" font-weight="700">TG EAPCET 2026 College Predictor</text>
+  <text x="80" y="365" fill="#cbd5e1" font-family="Inter, Arial, sans-serif" font-size="30">Safe � Target � Dream Colleges</text>
+  <text x="80" y="420" fill="#cbd5e1" font-family="Inter, Arial, sans-serif" font-size="30">Free Counselling Community</text>
+  <text x="80" y="540" fill="#f97316" font-family="Inter, Arial, sans-serif" font-size="26" font-weight="600">rankwise.co.in</text>
+</svg>

@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
   ApproveImportResponse,
+  ImportStatusResponse,
   ImportStagingRow,
   ImportUploadResponse,
   PurgeCutoffsResponse,
@@ -41,6 +42,12 @@ export class ImportService {
     return this.http.post<ApproveImportResponse>(
       `${environment.apiBaseUrl}/admin/imports/${importId}/approve`,
       {}
+    );
+  }
+
+  getImportStatus(importId: number): Observable<ImportStatusResponse> {
+    return this.http.get<ImportStatusResponse>(
+      `${environment.apiBaseUrl}/admin/imports/${importId}`
     );
   }
 

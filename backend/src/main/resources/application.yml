@@ -38,6 +38,18 @@ app:
     storage-dir: ${IMPORT_STORAGE_DIR:./data/imports}
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200,http://localhost}
+  cursor:
+    api-key: ${CURSOR_API_KEY:}
+    model: ${CURSOR_MODEL:composer-2.5}
+    enabled: ${CURSOR_ENABLED:true}
+    poll-interval-ms: ${CURSOR_POLL_INTERVAL_MS:1500}
+    max-wait-ms: ${CURSOR_MAX_WAIT_MS:120000}
+    agent-name-prefix: ${CURSOR_AGENT_NAME_PREFIX:RankWise}
+  chat:
+    rate-limit-per-hour: ${CHAT_RATE_LIMIT_PER_HOUR:60}
+    max-message-length: ${CHAT_MAX_MESSAGE_LENGTH:2000}
+    lead-cta-after-messages: ${CHAT_LEAD_CTA_AFTER:4}
+    rag-max-articles: ${CHAT_RAG_MAX_ARTICLES:4}
 
 management:
   endpoints:

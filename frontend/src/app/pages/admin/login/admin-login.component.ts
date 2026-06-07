@@ -26,8 +26,8 @@ export class AdminLoginComponent {
   readonly errorMessage = signal<string | null>(null);
 
   readonly form = this.fb.group({
-    username: ['admin', Validators.required],
-    password: ['admin123', Validators.required],
+    username: ['', Validators.required],
+    password: ['', Validators.required],
   });
 
   submit(): void {

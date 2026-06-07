@@ -12,6 +12,7 @@ import { MetaResponse } from '../../../core/models/meta.models';
 import {
   ApproveImportResponse,
   ImportStagingRow,
+  ImportStatusResponse,
   ImportUploadResponse,
   PurgeCutoffsResponse,
 } from '../../../core/models/import.models';
@@ -45,6 +46,7 @@ export class AdminImportComponent implements OnInit {
 
   readonly uploading = signal(false);
   readonly approving = signal(false);
+  readonly approveProgress = signal<string | null>(null);
   readonly errorMessage = signal<string | null>(null);
   readonly successMessage = signal<string | null>(null);
 
@@ -166,28 +168,70 @@ export class AdminImportComponent implements OnInit {
     }
 
     this.approving.set(true);
+    this.approveProgress.set('Starting import…');
     this.errorMessage.set(null);
     this.importService.approve(importId).subscribe({
       next: (res) => {
-        this.approveResult.set(res);
-        this.approving.set(false);
-        // Keep UI status in sync so the Approve button disables after success.
-        this.uploadResult.update((u) => (u ? { ...u, status: res.status } : u));
-        this.successMessage.set(
-          `Import complete — ${res.inserted} inserted, ${res.skippedDuplicates} duplicates skipped in ${res.durationMs}ms.`
-        );
+        if (res.status === 'IMPORTING') {
+          this.uploadResult.update((u) => (u ? { ...u, status: 'IMPORTING' } : u));
+          this.pollImportStatus(importId);
+          return;
+        }
+        this.finishApprove(res);
       },
       error: (e) => {
         this.approving.set(false);
+        this.approveProgress.set(null);
         const msg = (e?.message ?? 'Approve failed') as string;
         this.errorMessage.set(msg);
-        // If backend says it's already IMPORTED (or other status), reflect it to disable Approve.
         const m = msg.match(/Current:\s*([A-Z_]+)/);
         if (m?.[1]) {
           this.uploadResult.update((u) => (u ? { ...u, status: m[1] } : u));
         }
       },
     });
+  }
+
+  private pollImportStatus(importId: number, attempt = 0): void {
+    if (attempt > 180) {
+      this.approving.set(false);
+      this.approveProgress.set(null);
+      this.errorMessage.set('Import is taking longer than expected. Refresh the page and check import status.');
+      return;
+    }
+
+    this.importService.getImportStatus(importId).subscribe({
+      next: (res) => {
+        if (res.status === 'IMPORTING') {
+          this.approveProgress.set(`Importing cutoffs… (${Math.max(1, attempt + 1)}s)`);
+          setTimeout(() => this.pollImportStatus(importId, attempt + 1), 1000);
+          return;
+        }
+        if (res.status === 'FAILED') {
+          this.approving.set(false);
+          this.approveProgress.set(null);
+          this.errorMessage.set('Import failed on the server. Check admin import logs.');
+          this.uploadResult.update((u) => (u ? { ...u, status: 'FAILED' } : u));
+          return;
+        }
+        this.finishApprove(res);
+      },
+      error: (e) => {
+        this.approving.set(false);
+        this.approveProgress.set(null);
+        this.errorMessage.set(e.message ?? 'Failed to check import status');
+      },
+    });
+  }
+
+  private finishApprove(res: ApproveImportResponse | ImportStatusResponse): void {
+    this.approveResult.set(res);
+    this.approving.set(false);
+    this.approveProgress.set(null);
+    this.uploadResult.update((u) => (u ? { ...u, status: res.status } : u));
+    this.successMessage.set(
+      `Import complete — ${res.inserted} inserted, ${res.skippedDuplicates} duplicates skipped in ${res.durationMs}ms.`
+    );
   }
 
   purgeCutoffs(): void {

@@ -1,7 +1,9 @@
 package com.rankwise.importing;
 
 import com.rankwise.importing.dto.ApproveImportResponse;
+import com.rankwise.importing.dto.ImportStatusResponse;
 import com.rankwise.importing.dto.ImportUploadResponse;
+import com.rankwise.importing.dto.RepairCollegeNamesResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -44,9 +46,21 @@ public class ImportController {
     }
 
     @PostMapping("/{importId}/approve")
-    @Operation(summary = "Approve an import: batch insert staged rows into cutoff")
+    @Operation(summary = "Approve an import: batch insert staged rows into cutoff (async)")
     public ApproveImportResponse approve(@PathVariable Long importId) {
         return importService.approve(importId);
+    }
+
+    @GetMapping("/{importId}")
+    @Operation(summary = "Poll import status after async approve")
+    public ImportStatusResponse status(@PathVariable Long importId) {
+        return importService.getImportStatus(importId);
+    }
+
+    @PostMapping("/repair-college-names")
+    @Operation(summary = "Re-parse stored import PDFs and fix college names that were saved as place-only")
+    public RepairCollegeNamesResponse repairCollegeNames() {
+        return importService.repairCollegeNamesFromStoredImports();
     }
 }
 

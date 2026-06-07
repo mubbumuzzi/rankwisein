@@ -1,12 +1,8 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { MatButtonModule } from '@angular/material/button';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
 import { MetaService } from '../../core/services/meta.service';
-import { PredictService } from '../../core/services/predict.service';
+import { LeadService } from '../../core/services/lead.service';
 import { PredictStateService } from '../../core/services/predict-state.service';
 import { LoadingSpinnerComponent } from '../../shared/components/loading-spinner/loading-spinner.component';
 import { MetaResponse } from '../../core/models/meta.models';
@@ -14,20 +10,13 @@ import { startWith } from 'rxjs';
 
 @Component({
   selector: 'app-predict',
-  imports: [
-    ReactiveFormsModule,
-    MatButtonModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    LoadingSpinnerComponent,
-  ],
+  imports: [ReactiveFormsModule, LoadingSpinnerComponent],
   templateUrl: './predict.component.html',
 })
 export class PredictComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly metaService = inject(MetaService);
-  private readonly predictService = inject(PredictService);
+  private readonly leadService = inject(LeadService);
   private readonly state = inject(PredictStateService);
   private readonly router = inject(Router);
 
@@ -42,7 +31,7 @@ export class PredictComponent implements OnInit {
     category: ['', Validators.required],
     gender: ['', Validators.required],
     preferredBranches: [[] as string[], Validators.required],
-    year: [null as number | null, Validators.required],
+    year: ['', Validators.required],
     phase: ['', Validators.required],
   });
 
@@ -56,21 +45,6 @@ export class PredictComponent implements OnInit {
       next: (m) => {
         this.meta.set(m);
         this.metaLoading.set(false);
-        if (m.categories.length && !this.form.value.category) {
-          this.form.patchValue({ category: m.categories[0] });
-        }
-        if (m.genders.length && !this.form.value.gender) {
-          this.form.patchValue({ gender: m.genders[0] });
-        }
-        if (m.years.length && !this.form.value.year) {
-          // Seed data currently exists for 2024; default to that when available.
-          const preferredDefault = m.years.includes(2024) ? 2024 : m.years[m.years.length - 1];
-          this.form.patchValue({ year: preferredDefault });
-        }
-        if (m.phases.length && !this.form.value.phase) {
-          const preferredPhase = m.phases.includes('FINAL_PHASE') ? 'FINAL_PHASE' : m.phases[0];
-          this.form.patchValue({ phase: preferredPhase });
-        }
       },
       error: (e) => {
         this.metaLoading.set(false);
@@ -104,6 +78,10 @@ export class PredictComponent implements OnInit {
     return g === 'BOYS' ? 'Male' : g === 'GIRLS' ? 'Female' : g;
   }
 
+  formatPhase(phase: string): string {
+    return phase.replace(/_/g, ' ');
+  }
+
   branchLabel(code: string): string {
     switch ((code ?? '').toUpperCase()) {
       case 'INF':
@@ -133,15 +111,18 @@ export class PredictComponent implements OnInit {
     const category = this.form.value.category!;
     const gender = this.form.value.gender!;
     const preferredBranches = this.form.value.preferredBranches!;
-    const year = this.form.value.year!;
+    const year = Number(this.form.value.year);
     const phase = this.form.value.phase!;
 
     this.submitting.set(true);
-    this.predictService
-      .predict({ rank, category, gender, preferredBranches, year, phase })
+    this.leadService
+      .submit({ rank, category, gender, preferredBranches, year, phase })
       .subscribe({
         next: (result) => {
-          this.state.setResult({ rank, category, gender, preferredBranches, year, phase }, result);
+          this.state.setResult(
+            { rank, category, gender, preferredBranches, year, phase },
+            result.recommendations
+          );
           this.submitting.set(false);
           void this.router.navigate(['/results']);
         },

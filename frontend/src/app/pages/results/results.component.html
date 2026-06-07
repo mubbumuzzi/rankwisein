@@ -19,7 +19,8 @@
       <p class="mt-1 text-sm text-slate-500">{{ totalCount() }} colleges matched your criteria</p>
       <div class="mt-6 flex flex-wrap gap-3">
         <a
-          routerLink="/check"
+          routerLink="/"
+          [queryParams]="{ check: '1' }"
           class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-rw-primary hover:bg-slate-50"
           >← New search</a
         >
@@ -34,7 +35,7 @@
         }}</span>
       </div>
       <p class="mb-6 text-sm text-slate-600">
-        More competitive options — lower historical closing ranks (reach / stretch).
+        Reach colleges — last year&apos;s closing rank was better (lower) than your rank. Ratio &gt; 1.10.
       </p>
       @if (r.dream.length === 0) {
         <p class="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-slate-500">
@@ -95,4 +96,5 @@
       }
     </section>
   </div>
+  <app-whatsapp-sticky-cta />
 }

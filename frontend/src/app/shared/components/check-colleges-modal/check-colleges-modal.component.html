@@ -1,0 +1,187 @@
+<div class="rw-modal">
+  <div class="flex items-start justify-between gap-4 border-b border-slate-100 px-6 py-5">
+    <div>
+      <h2 class="text-xl font-bold text-rw-primary">Check My Colleges</h2>
+      <p class="mt-1 text-sm text-slate-600">Free Dream, Target &amp; Safe lists from cutoff data</p>
+    </div>
+    <button
+      type="button"
+      class="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+      (click)="close()"
+      aria-label="Close"
+    >
+      ✕
+    </button>
+  </div>
+
+  <div class="max-h-[70vh] overflow-y-auto px-6 py-5">
+    @if (metaLoading()) {
+      <p class="py-8 text-center text-sm text-slate-500">Loading options…</p>
+    } @else if (meta(); as m) {
+      <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-4">
+        <div class="rw-field">
+          <label class="rw-label" for="rank">Your EAMCET rank</label>
+          <input
+            id="rank"
+            type="number"
+            formControlName="rank"
+            min="1"
+            placeholder="e.g. 5000"
+            class="rw-input"
+            [class.rw-input-invalid]="form.get('rank')?.invalid && form.get('rank')?.touched"
+          />
+          @if (form.get('rank')?.invalid && form.get('rank')?.touched) {
+            <p class="rw-error">Enter a valid rank</p>
+          }
+        </div>
+
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div class="rw-field">
+            <label class="rw-label" for="category">Category</label>
+            <div class="rw-select-wrap">
+              <select
+                id="category"
+                formControlName="category"
+                class="rw-select"
+                [class.rw-input-invalid]="form.get('category')?.invalid && form.get('category')?.touched"
+              >
+                <option value="" disabled>Select</option>
+                @for (cat of m.categories; track cat) {
+                  <option [value]="cat">{{ cat }}</option>
+                }
+              </select>
+              <span class="rw-select-chevron" aria-hidden="true">▼</span>
+            </div>
+            @if (form.get('category')?.hasError('required') && form.get('category')?.touched) {
+              <p class="rw-error">Select your category</p>
+            }
+          </div>
+
+          <div class="rw-field">
+            <label class="rw-label" for="gender">Gender</label>
+            <div class="rw-select-wrap">
+              <select
+                id="gender"
+                formControlName="gender"
+                class="rw-select"
+                [class.rw-input-invalid]="form.get('gender')?.invalid && form.get('gender')?.touched"
+              >
+                <option value="" disabled>Select</option>
+                @for (g of m.genders; track g) {
+                  <option [value]="g">{{ genderLabel(g) }}</option>
+                }
+              </select>
+              <span class="rw-select-chevron" aria-hidden="true">▼</span>
+            </div>
+            @if (form.get('gender')?.hasError('required') && form.get('gender')?.touched) {
+              <p class="rw-error">Select gender</p>
+            }
+          </div>
+        </div>
+
+        <div class="rw-field">
+          <label class="rw-label" for="mobile">Mobile number (optional)</label>
+          <input
+            id="mobile"
+            type="tel"
+            formControlName="mobile"
+            maxlength="10"
+            placeholder="10-digit mobile"
+            class="rw-input"
+            [class.rw-input-invalid]="form.get('mobile')?.invalid && form.get('mobile')?.touched"
+          />
+          <p class="rw-hint">For counselling follow-up only — not shared publicly</p>
+          @if (form.get('mobile')?.invalid && form.get('mobile')?.touched) {
+            <p class="rw-error">Enter a valid 10-digit mobile number</p>
+          }
+        </div>
+
+        <div>
+          <div class="mb-2 flex items-center justify-between">
+            <label class="text-sm font-semibold text-rw-primary">Interested branches</label>
+            <button type="button" class="text-sm font-semibold text-rw-accent hover:underline" (click)="selectAllBranches()">
+              Select all
+            </button>
+          </div>
+          <div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            @for (code of m.branches; track code) {
+              <button
+                type="button"
+                (click)="toggleBranch(code)"
+                class="rounded-xl border px-3 py-2.5 text-sm font-medium transition"
+                [class.border-rw-accent]="isBranchSelected(code)"
+                [class.bg-orange-50]="isBranchSelected(code)"
+                [class.text-rw-primary]="isBranchSelected(code)"
+                [class.border-slate-200]="!isBranchSelected(code)"
+                [class.bg-white]="!isBranchSelected(code)"
+              >
+                {{ branchLabel(code) }}
+              </button>
+            }
+          </div>
+          @if (form.get('preferredBranches')?.touched && (form.value.preferredBranches?.length ?? 0) === 0) {
+            <p class="rw-error mt-2">Select at least one branch</p>
+          }
+        </div>
+
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div class="rw-field">
+            <label class="rw-label" for="year">Cutoff year</label>
+            <div class="rw-select-wrap">
+              <select
+                id="year"
+                formControlName="year"
+                class="rw-select"
+                [class.rw-input-invalid]="form.get('year')?.invalid && form.get('year')?.touched"
+              >
+                <option value="" disabled>Select</option>
+                @for (y of m.years; track y) {
+                  <option [value]="y">{{ y }}</option>
+                }
+              </select>
+              <span class="rw-select-chevron" aria-hidden="true">▼</span>
+            </div>
+            @if (form.get('year')?.hasError('required') && form.get('year')?.touched) {
+              <p class="rw-error">Select cutoff year</p>
+            }
+          </div>
+
+          <div class="rw-field">
+            <label class="rw-label" for="phase">Phase</label>
+            <div class="rw-select-wrap">
+              <select
+                id="phase"
+                formControlName="phase"
+                class="rw-select"
+                [class.rw-input-invalid]="form.get('phase')?.invalid && form.get('phase')?.touched"
+              >
+                <option value="" disabled>Select</option>
+                @for (p of m.phases; track p) {
+                  <option [value]="p">{{ formatPhase(p) }}</option>
+                }
+              </select>
+              <span class="rw-select-chevron" aria-hidden="true">▼</span>
+            </div>
+            @if (form.get('phase')?.hasError('required') && form.get('phase')?.touched) {
+              <p class="rw-error">Select phase</p>
+            }
+          </div>
+        </div>
+
+        @if (errorMessage()) {
+          <p class="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
+            {{ errorMessage() }}
+          </p>
+        }
+
+        <button
+          type="submit"
+          class="h-12 w-full rounded-xl bg-rw-accent text-base font-bold text-white shadow-sm transition hover:bg-rw-accent-hover disabled:opacity-60"
+          [disabled]="submitting()"
+        >
+          {{ submitting() ? 'Finding colleges…' : 'Get My College List' }}
+        </button>
+      </form>
+    }
+  </div>
+</div>

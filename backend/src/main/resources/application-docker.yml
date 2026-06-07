@@ -2,7 +2,4 @@ app:
   pdf-import:
     storage-dir: /data/imports
   cors:
-    # Allow Cloudflare Tunnel demo URLs as well.
-    # Note: Spring's CORS allowed-origins doesn't support wildcards, so we use a permissive
-    # list for docker demo usage.
-    allowed-origins: http://localhost,http://localhost:4200,https://*.trycloudflare.com,https://rankwise.co.in,https://www.rankwise.co.in
+    allowed-origins: ${CORS_ALLOWED_ORIGINS}

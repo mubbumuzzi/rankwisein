@@ -1,921 +1,437 @@
-Build a production-ready web application called RankWise.
+# ====================================================
+# RankWise — Product & Technical Flow
+# ====================================================
+# Last updated to match the implemented codebase.
+# Run: docker-compose up --build
+# ====================================================
 
 # ====================================================
-PROJECT VISION
+# PROJECT VISION
+# ====================================================
 
-RankWise is a personalized TS EAMCET counselling platform.
+RankWise is a personalized TS/TG EAPCET (EAMCET) counselling platform.
 
-Students enter
-
+Students provide:
 - Rank
 - Category
 - Gender
-- Preferred Branches
+- Preferred branches
+- Counselling year and phase (cutoff dataset to use)
 
-The system analyzes historical cutoff data and returns
+The system analyzes historical cutoff data and returns:
+1. Dream colleges (stretch — closing rank better than yours)
+2. Target colleges (close match to your rank)
+3. Safe colleges (higher closing ranks — more comfortable admits)
 
-1. Dream Colleges
-2. Target Colleges
-3. Safe Colleges
-
-The goal is not just cutoff lookup.
-
-The goal is to help students make better counselling decisions.
+Goals beyond lookup:
+- Lead capture for follow-up counselling
+- AI counsellor chat (FAQ RAG + structured college cards)
+- WhatsApp community / counselling CTAs
+- Admin PDF import of official TG EAPCET cutoff PDFs
 
 # ====================================================
-TECH STACK
+# BRANDING
+# ====================================================
+
+Name:     RankWise
+Tagline:  Your Rank. Your Right College.
+
+Theme:
+- Primary: #0F172A
+- Accent:  #F97316
+- Mobile-first, educational startup UI
+
+# ====================================================
+# TECH STACK
+# ====================================================
 
 Frontend
-
-- Angular 20
-- TypeScript
-- Tailwind CSS
-- Angular Material
+- Angular 20, TypeScript, Tailwind CSS, Angular Material
 
 Backend
-
-- Spring Boot 3
-- Java 21
-- Maven
+- Spring Boot 3, Java 21, Maven
+- MapStruct, Lombok, Flyway, Swagger/OpenAPI
 
 Database
+- Microsoft SQL Server 2022 (Docker)
+- Flyway migrations V1–V8
 
-- PostgreSQL
+Auth
+- Spring Security + JWT (admin only)
+- Public APIs: predict, leads, chat, meta, colleges
 
-Authentication
+AI counsellor (optional)
+- Cursor Cloud Agent API (CURSOR_API_KEY, CURSOR_MODEL)
+- FAQ RAG from faq_article seed (V7)
 
-- Spring Security
-- JWT
+PDF import
+- Apache PDFBox — deterministic parser (no OCR / LLM)
 
-Documentation
+Deploy
+- Docker Compose: sqlserver → db-init → backend → frontend
 
-- Swagger OpenAPI
-
-Deployment
-
-- Docker
-- Docker Compose
-
-# ====================================================
-BRANDING
-
-Name
-RankWise
-
-Tagline
-Your Rank. Your Right College.
-
-Theme
-
-Primary
-#0F172A
-
-Accent
-#F97316
-
-Modern educational startup design.
-
-Mobile-first responsive UI.
+URLs (default)
+- Frontend:  http://localhost
+- Backend:   http://localhost:8080
+- Swagger:   http://localhost:8080/swagger-ui.html
+- Health:    http://localhost:8080/actuator/health
 
 # ====================================================
-DATABASE DESIGN
+# DATABASE (core tables)
+# ====================================================
 
-Table college
+college           — code, name, location, district, autonomous, website
+branch            — code, name (e.g. CSE, INF, AIM, ECE, EEE, MEC, CIV)
+college_branch    — college + branch + optional intake
+cutoff            — year, phase, college, branch, category, gender, closing_rank
+                  — unique (year, phase, college, branch, category, gender)
 
-id
-code
-name
-location
-district
-autonomous
-website
-created_at
+student_search    — anonymous predict audit (rank, category, gender, branches, IP)
 
----
+admin_user        — JWT admin login
 
-Table branch
+import_file       — PDF upload metadata, status, duration
+import_log        — import messages
+import_staging_row — parsed rows before approve (valid / duplicate flags)
 
-id
-code
-name
-created_at
+lead              — name (optional), mobile (optional), rank, category, gender, branches
 
-Examples
-
-CSE
-AIML
-IT
-ECE
-EEE
-MECH
-CIVIL
-
----
-
-Table college_branch
-
-id
-college_id
-branch_id
-intake
-created_at
-
----
-
-Table cutoff
-
-id
-year
-phase
-
-college_id
-branch_id
-
-category
-gender
-
-closing_rank
-
-created_at
-
----
-
-Table student_search
-
-id
-
-rank
-
-category
-
-gender
-
-preferred_branches
-
-ip_address
-
-created_at
-
----
-
-Table admin_user
-
-id
-username
-email
-password
-role
-created_at
-
----
-
-Table import_file
-
-id
-
-file_name
-
-file_path
-
-year
-
-phase
-
-status
-
-records_imported
-
-import_duration
-
-uploaded_at
-
----
-
-Table import_log
-
-id
-
-import_file_id
-
-message
-
-created_at
+chat_user         — visitor_token (client header X-Visitor-Token)
+student_profile   — rank, category, gender, branches, location, budget (per chat user)
+chat_session      — messages, lead_cta_shown, cursor_agent_id (V8)
+chat_message      — USER / ASSISTANT / SYSTEM + optional structured_json
+faq_article       — RAG knowledge base (seeded V7)
+chat_analytics_event — message_sent, predictor_used, comparison_used, etc.
 
 # ====================================================
-USER FLOW
+# FRONTEND ROUTES
+# ====================================================
 
-Student visits website.
+/                 Landing (hero, features, FAQ, community CTAs)
+/check            Full-page college predictor form
+/results          Dream / Target / Safe results (requires in-memory state)
+/college-cutoffs  Public college search + cutoff browse
+/about            About RankWise / founder
+/privacy          Privacy policy
+/terms            Terms of use
 
-Landing Page
+/admin/login      Admin JWT login
+/admin/import     PDF import + staging preview + approve + cutoff purge
+/admin/leads      Lead list + CSV export
+/admin/chat       Chat session analytics + export
+/admin            Redirects to /admin/import
 
-↓
-
-Clicks
-
-Check My Colleges
-
-↓
-
-Fills form
-
-Rank
-
-Category
-
-OC
-BC-A
-BC-B
-BC-C
-BC-D
-BC-E
-SC
-ST
-
-Gender
-
-Male
-Female
-
-Preferred Branches
-
-Multiple Selection
-
-CSE
-AIML
-IT
-ECE
-EEE
-MECH
-CIVIL
-
-↓
-
-Submit
-
-↓
-
-Get Recommendations
+Global shell (app.component):
+- Header, footer, floating counselling chatbot (hidden on some admin paths)
 
 # ====================================================
-RECOMMENDATION ENGINE
+# STUDENT FLOW — College predictor
+# ====================================================
 
-Student Input
+Entry A — Landing modal (primary CTA)
+────────────────────────────────────
+Student visits /
+  → Clicks "Check My Colleges" (or ?check=1 deep link)
+  → CheckCollegesModal opens (Material dialog)
+  → Fills: rank, category, gender, branches (multi), year, phase
+  → Optional: name, 10-digit mobile
+  → Submit
 
-Rank
-Category
-Gender
-Preferred Branches
+Entry B — Dedicated page
+────────────────────────
+Student navigates to /check
+  → Same fields (no modal)
+  → Submit
 
-Search matching cutoff records.
+Both paths call the same backend flow.
 
-Logic
+API
+  POST /api/leads
+  Body: rank, category, gender, preferredBranches[], year?, phase?, name?, mobile?
 
-ratio = studentRank  closingRank
+Backend (LeadService)
+  1. Save lead row (branch = comma-separated codes)
+  2. Build PredictRequest → PredictService.predict()
+  3. Return { leadId, recommendations: PredictResponse }
 
-Dream
+Frontend
+  1. PredictStateService stores form + recommendations
+  2. Navigate to /results
+  3. Results page shows three sections + WhatsApp sticky CTA
+  4. If no state → redirect to /?check=1
 
-ratio = 0.90
+Alternate API (no lead save)
+  POST /api/predict
+  — Same PredictService; logs student_search only
 
-Target
+Form options source
+  GET /api/meta
+  — categories, genders, branches, years, phases
 
-ratio  0.90
-AND
-ratio = 1.10
+Categories (stored values)
+  OC, BC-A, BC-B, BC-C, BC-D, BC-E, SC-I, SC-II, SC-III, ST, EWS
 
-Safe
+Genders (PDF-aligned)
+  BOYS, GIRLS  (UI labels: Male / Female)
 
-ratio  1.10
+Phases
+  PHASE_1, PHASE_2, FINAL_PHASE
 
-Sort By
+Supported years (constants)
+  2024, 2025  (default: latest in list)
 
-1. Preferred Branch Match
-2. Closing Rank
-3. College Name
-
-Return
-
-Top Dream Colleges
-
-Top Target Colleges
-
-Top Safe Colleges
+Branch codes (DB / PDF)
+  CSE, INF→IT, AIM→AIML, ECE, EEE, MEC→MECH, CIV→CIVIL
 
 # ====================================================
-SEARCH ENGINE
+# RECOMMENDATION ENGINE (PredictService)
+# ====================================================
 
-Create optimized SQL search.
+Input
+  rank, category, gender, preferredBranches[], year, phase
 
-Filter By
+Steps
+  1. Normalize gender (MALE/M → BOYS, FEMALE/F → GIRLS)
+  2. Log student_search (IP from X-Forwarded-For or remote)
+  3. Query cutoffs: category + gender + branches + year + phase
+  4. For each cutoff with closing_rank > 0:
+       ratio = studentRank / closingRank
+       (lower rank number = better student performance)
+  5. Classify bucket:
+       ratio <= 0.90  → SAFE   (closing rank well above yours)
+       ratio <= 1.10  → TARGET (close match)
+       ratio >  1.10  → DREAM  (stretch — better closing rank than yours)
+  6. Sort base list: preferred branch first, then closing_rank, then college name
+  7. Cap lists: Dream 30, Target 30, Safe 10
+  8. Re-sort within bucket (dream = hardest first; target = closest to 1.0 ratio; safe = best safe options first)
 
-Category
+Response (PredictResponse)
+  rank, category, gender, year, phase
+  dream[], target[], safe[] — each CollegeRecommendation with bucket badge
 
-Gender
-
-Branch
-
-Year
-
-Phase
-
-Use indexes
-
-(category)
-
-(gender)
-
-(branch_id)
-
-(closing_rank)
-
-(year)
-
-(college_id)
-
-Search should return results in milliseconds.
+Result card fields
+  college code/name, branch code/name, closing_rank, category, gender, year, phase, ratio, preferredBranch flag
 
 # ====================================================
-LANDING PAGE
+# STUDENT FLOW — Public college cutoffs
+# ====================================================
 
-Hero Section
+/college-cutoffs
 
-Headline
+  GET /api/colleges/search?q=&page=
+  GET /api/colleges/{collegeId}/cutoffs?year=&phase=&category=&gender=
 
-Get Personalized TS EAMCET College Recommendations
-
-Subheading
-
-Find Safe, Target and Dream Colleges based on your rank.
-
-CTA
-
-Check My Colleges
-
----
-
-Features
-
-Rank-Based Analysis
-
-Dream Colleges
-
-Target Colleges
-
-Safe Colleges
-
-Latest Cutoff Data
-
-Branch Recommendations
-
----
-
-How It Works
-
-1. Enter Rank
-2. Select Category
-3. Select Branches
-4. Get Recommendations
+Browse colleges and view cutoff tables without submitting a lead.
 
 # ====================================================
-RESULT PAGE
+# STUDENT FLOW — AI counselling chatbot
+# ====================================================
 
-Sections
+Floating widget on most pages (counselling-chatbot).
 
-Dream Colleges
+Session
+  POST /api/chat/sessions          — creates chat_user + session; returns sessionId + visitorToken
+  Header on subsequent calls: X-Visitor-Token
 
-Target Colleges
+Messages
+  POST /api/chat/sessions/{id}/messages
+  GET  /api/chat/sessions/{id}/messages
 
-Safe Colleges
+Profile (for personalized predictions in chat)
+  PUT /api/chat/sessions/{id}/profile
+  — rank, category, gender, preferredBranches, location, budget
 
-Each Card Shows
+Analytics
+  POST /api/chat/sessions/{id}/events  — e.g. WhatsApp CTA clicks
 
-College Name
+Suggested prompts
+  GET /api/chat/suggested-questions
 
-Branch
+Processing (ChatCounsellorService)
+  1. Sanitize input, rate-limit, save user message
+  2. ChatIntentDetector — rank regex, compare colleges, documents, branch advice, prediction, counselling guide
+  3. Update profile if rank detected in message
+  4. Build structured payloads when intent matches:
+       DOCUMENTS, BRANCH_ADVICE, COMPARISON, PREDICTION (uses same bucket logic via ChatCollegeContextService)
+  5. FAQ RAG retrieval (ChatRagService)
+  6. Cursor Cloud Agent when configured (multi-turn via cursor_agent_id on session)
+  7. Save assistant message + structured_json for UI panels
 
-Previous Closing Rank
-
-Category
-
-Year
-
-Phase
-
-Recommendation Badge
+Chat links to predictor
+  — "Check colleges" opens CheckCollegesLauncherService modal → /results
 
 # ====================================================
-ADMIN PANEL
+# ADMIN FLOW — Authentication
+# ====================================================
 
-Protected via JWT.
+  POST /api/admin/login  { username, password }
+  → JWT returned; stored client-side
 
-Admin Login
+Protected: /api/admin/**  (role ADMIN)
 
-Dashboard Metrics
-
-Total Colleges
-
-Total Branches
-
-Total Cutoff Records
-
-Total Student Searches
-
-Latest Imports
+Default credentials from .env (local): admin / admin123
 
 # ====================================================
-PDF IMPORT SYSTEM
+# ADMIN FLOW — PDF import
+# ====================================================
 
-IMPORTANT
+UI: /admin/import
 
-All TG EAPCET cutoff PDFs follow the same structure.
+Step 1 — Upload
+  POST /api/admin/imports/pdf
+  multipart: file + year + phase
+  → PdfImportService: PDFBox text extract → TgEapcetPdfParser
+  → Rows staged in import_staging_row (not yet in cutoff)
 
-DO NOT USE
+Step 2 — Preview staging
+  GET /api/admin/imports/{importId}/staging?page=&size=
+  UI: search/filter invalid & duplicate rows
+  DELETE /api/admin/imports/{importId}/staging/{rowId}  — remove bad row
 
-- AI Parsing
-- OCR
-- LLM Parsing
+Step 3 — Approve
+  POST /api/admin/imports/{importId}/approve
+  → Batch insert into cutoff (JdbcTemplate, batch size 1000)
+  → Upsert colleges/branches as needed
+  → Summary: imported count, duplicates skipped, duration
 
-Build a deterministic parser.
+Maintenance
+  POST /api/admin/imports/repair-college-names
+  — Re-parse stored PDFs to fix truncated college names
+
+Danger zone
+  POST /api/admin/cutoffs/purge?year=&phase=
+  — Deletes all cutoff rows for year+phase
 
 # ====================================================
-PDF IMPORT FLOW
+# TG EAPCET PDF — Parser rules (deterministic)
+# ====================================================
 
-Step 1
+DO NOT USE: AI parsing, OCR, LLM for import.
 
-Admin Uploads PDF
+PDF row columns (per institute line):
+  Institute code, name, branch code/name
+  OC_BOYS, OC_GIRLS, BC_A_BOYS, BC_A_GIRLS, … SC/ST/EWS variants
 
-Supported
-
-2023
-
-2024
-
-2025
-
-2026
-
----
-
-Step 2
-
-Admin Selects
-
-Year
-
-Phase
-
-Phase 1
-
-Phase 2
-
-Final Phase
-
----
-
-Step 3
-
-Extract PDF Text
-
-Using
-
-Apache PDFBox
-
----
-
-Step 4
-
-Identify Valid Data Rows
+Normalization
+  Each category × gender cell → one cutoff row:
+    college, branch, category (OC, BC-A, SC-I, …), gender (BOYS/GIRLS), closing_rank
 
 Ignore
+  Page numbers, headers, footers, repeated column headers
 
-Page Numbers
-
-Headers
-
-Footers
-
-Repeated Column Headers
+Validation (staging)
+  Missing codes, invalid/negative rank, duplicate (year+phase+college+branch+category+gender)
 
 # ====================================================
-TG EAPCET PDF STRUCTURE
+# ADMIN FLOW — Leads
+# ====================================================
 
-Institute Code
+UI: /admin/leads
 
-Institute Name
+  GET /api/admin/leads?q=&page=
+  GET /api/admin/leads/export  — CSV download
 
-Branch Code
-
-Branch Name
-
-OC_BOYS
-OC_GIRLS
-
-BC_A_BOYS
-BC_A_GIRLS
-
-BC_B_BOYS
-BC_B_GIRLS
-
-BC_C_BOYS
-BC_C_GIRLS
-
-BC_D_BOYS
-BC_D_GIRLS
-
-BC_E_BOYS
-BC_E_GIRLS
-
-SC_I_BOYS
-SC_I_GIRLS
-
-SC_II_BOYS
-SC_II_GIRLS
-
-SC_III_BOYS
-SC_III_GIRLS
-
-ST_BOYS
-ST_GIRLS
-
-EWS_BOYS
-EWS_GIRLS
+Filters/search on name, mobile, category, rank, date range (LeadSpecifications).
 
 # ====================================================
-NORMALIZATION LOGIC
+# ADMIN FLOW — Chat analytics
+# ====================================================
 
-PDF Row Example
+UI: /admin/chat
 
-BVRI
-
-CSE
-
-6208
-
-7150
-
-19762
-
-...
-
-Convert Into
-
-BVRI
-CSE
-OC
-BOYS
-6208
-
-BVRI
-CSE
-OC
-GIRLS
-7150
-
-BVRI
-CSE
-BC_A
-BOYS
-19762
-
-...
-
-Every categorygender combination becomes one row.
-
-Store in cutoff table.
+  GET /api/admin/chat/stats
+  GET /api/admin/chat/sessions
+  GET /api/admin/chat/sessions/{id}
+  GET /api/admin/chat/export
 
 # ====================================================
-IMPORT PREVIEW SCREEN
-
-Before saving
-
-Show preview table.
-
-Columns
-
-College Code
-
-College Name
-
-Branch
-
-Category
-
-Gender
-
-Closing Rank
-
-Year
-
-Phase
-
-Allow
-
-Search
-
-Filter
-
-Delete Row
-
-Approve Import
-
+# ADMIN FLOW — College & branch CRUD (API)
 # ====================================================
-VALIDATION RULES
 
-Detect
-
-Missing College Code
-
-Missing Branch Code
-
-Invalid Rank
-
-Negative Rank
-
-Duplicate Record
-
-Duplicate Definition
-
-year
-
-phase
-
-college
-
-branch
-
-category
-
-gender
-
-already exists
-
-# ====================================================
-IMPORT PERFORMANCE
-
-Use
-
-JdbcTemplate Batch Insert
-
-Batch Size
-
-1000
-
-Target
-
-100,000+ records imported in under 30 seconds.
-
-# ====================================================
-IMPORT SUMMARY
-
-After import show
-
-Total Records Imported
-
-Duplicates Skipped
-
-Import Duration
-
-Colleges Imported
-
-Branches Imported
-
-# ====================================================
-COLLEGE MANAGEMENT
-
-Admin Can
-
-Add College
-
-Edit College
-
-Delete College
-
-Search College
-
-Filter College
-
-# ====================================================
-BRANCH MANAGEMENT
-
-Admin Can
-
-Add Branch
-
-Edit Branch
-
-Delete Branch
-
-# ====================================================
-CUTOFF MANAGEMENT
-
-Admin Can
-
-Search Cutoffs
-
-Filter By
-
-Year
-
-Phase
-
-Category
-
-Branch
-
-College
-
-Edit Cutoff
-
-Delete Cutoff
-
-# ====================================================
-API ENDPOINTS
-
-POST
-
-apipredict
-
----
-
-POST
-
-apiadminlogin
-
----
-
-POST
-
-apiadminupload-pdf
-
----
-
-GET
-
-apiadmincolleges
-
-POST
-
-apiadmincolleges
-
-PUT
-
-apiadmincolleges{id}
-
-DELETE
-
-apiadmincolleges{id}
-
----
-
-GET
-
-apiadmincutoffs
-
-POST
-
-apiadmincutoffs
-
-PUT
-
-apiadmincutoffs{id}
-
-DELETE
-
-apiadmincutoffs{id}
-
-# ====================================================
-SEED DATA
-
-Insert Sample Colleges
-
-CBIT
-
-VNR VJIET
-
-GRIET
-
-CVR
-
-MGIT
-
-SNIST
-
-MREC
-
-CMR
-
-MLRIT
-
-VJIT
-
-BVRIT
-
-Include
+Colleges
+  GET/POST    /api/admin/colleges
+  GET/PUT/DELETE /api/admin/colleges/{id}
+  GET         /api/admin/colleges/export
 
 Branches
+  GET/POST    /api/admin/branches
+  GET/PUT/DELETE /api/admin/branches/{id}
 
-Multiple Categories
-
-Sample Cutoff Data
-
-# ====================================================
-CODE QUALITY
-
-Use Clean Architecture.
-
-Separate
-
-Controller
-
-Service
-
-Repository
-
-DTO
-
-Mapper
-
-Entity
-
-Validation
-
-Exception Handling
-
-Security
+(No dedicated Angular admin UI for college/branch/cutoff CRUD yet — import + purge are primary data ops.)
 
 # ====================================================
-REQUIRED FEATURES
+# API SUMMARY (public)
+# ====================================================
 
-Spring Security
-
-JWT
-
-Swagger
-
-Flyway
-
-MapStruct
-
-Lombok
-
-Global Exception Handling
-
-Audit Logging
-
-Pagination
-
-Search APIs
-
-CSV Export
-
-Docker
-
-Docker Compose
-
-Responsive UI
-
-Loading States
-
-Error Handling
+GET   /api/meta
+POST  /api/predict
+POST  /api/leads
+GET   /api/colleges/search
+GET   /api/colleges/{id}/cutoffs
+POST  /api/chat/sessions
+GET   /api/chat/sessions/{id}
+GET   /api/chat/sessions/{id}/messages
+POST  /api/chat/sessions/{id}/messages
+PUT   /api/chat/sessions/{id}/profile
+POST  /api/chat/sessions/{id}/events
+GET   /api/chat/suggested-questions
 
 # ====================================================
-DELIVERABLE
+# API SUMMARY (admin — JWT)
+# ====================================================
 
-Generate a complete working codebase.
+POST  /api/admin/login
+POST  /api/admin/imports/pdf
+GET   /api/admin/imports/{id}/staging
+DELETE /api/admin/imports/{id}/staging/{rowId}
+POST  /api/admin/imports/{id}/approve
+POST  /api/admin/imports/repair-college-names
+POST  /api/admin/cutoffs/purge
+GET   /api/admin/leads
+GET   /api/admin/leads/export
+GET   /api/admin/chat/stats
+GET   /api/admin/chat/sessions
+GET   /api/admin/chat/sessions/{id}
+GET   /api/admin/chat/export
+CRUD  /api/admin/colleges, /api/admin/branches
 
-Include
+# ====================================================
+# CONFIGURATION (.env)
+# ====================================================
 
-Angular Frontend
+MSSQL_SA_PASSWORD, MSSQL_DATABASE
+JWT_SECRET, JWT_EXPIRATION_MS
+ADMIN_USERNAME, ADMIN_EMAIL, ADMIN_PASSWORD
+CURSOR_API_KEY, CURSOR_MODEL, CURSOR_ENABLED (chat)
 
-Spring Boot Backend
+# ====================================================
+# ARCHITECTURE CONVENTIONS
+# ====================================================
 
-PostgreSQL Schema
+Layers: Controller → Service → Repository → Entity
+DTOs + MapStruct mappers where applicable
+Global exception handler, validation, pagination (PageResponse)
+CSV export service for admin exports
+Docker healthchecks on sqlserver and backend
 
-Flyway Migrations
+# ====================================================
+# END-TO-END DIAGRAM (student happy path)
+# ====================================================
 
-JWT Security
+  Landing (/)
+      │
+      ├─► [Chatbot] ──► /api/chat/* ──► structured advice / FAQ / optional Cursor agent
+      │
+      └─► Check My Colleges (modal) or /check
+              │
+              POST /api/leads
+              │
+              ├─► lead table
+              └─► PredictService ──► cutoff query ──► Dream / Target / Safe
+                      │
+                      ▼
+              /results + WhatsApp CTA
+                      │
+                      └─► Community / counsellor links (site.constants)
 
-Recommendation Engine
-
-Admin Dashboard
-
-TG EAPCET PDF Parser
-
-Import Preview Screen
-
-Search APIs
-
-Docker Setup
-
-Seed Data
-
-Swagger Documentation
-
-Run Instructions
-
-The application should run locally with
-
-docker-compose up
-
-without requiring additional configuration.
-
-hi
+# ====================================================

@@ -6,7 +6,12 @@
         Upload TG EAPCET last-rank PDF → preview → approve to save cutoffs.
       </p>
     </div>
-    <div class="flex items-center gap-2">
+    <div class="flex flex-wrap items-center gap-2">
+      <nav class="flex gap-1 text-sm">
+        <span class="rounded-lg bg-slate-100 px-3 py-1.5 font-semibold text-rw-primary">Import</span>
+        <a routerLink="/admin/leads" class="rounded-lg px-3 py-1.5 text-slate-600 hover:bg-slate-100">Leads</a>
+        <a routerLink="/admin/chat" class="rounded-lg px-3 py-1.5 text-slate-600 hover:bg-slate-100">AI Chat</a>
+      </nav>
       <span class="text-sm text-slate-500">Logged in as {{ auth.getUsername() }}</span>
       <button mat-stroked-button type="button" (click)="logout()">Logout</button>
       <a routerLink="/" class="text-sm text-rw-accent hover:underline">Student site</a>
@@ -115,12 +120,15 @@
             mat-flat-button
             type="button"
             class="!rounded-xl !bg-rw-primary !font-semibold"
-            [disabled]="approving() || upload.status === 'IMPORTED' || upload.validRows === upload.duplicateRows"
+            [disabled]="approving() || upload.status === 'IMPORTED' || upload.status === 'IMPORTING' || upload.validRows === upload.duplicateRows"
             (click)="approve()"
           >
-            {{ approving() ? 'Importing…' : 'Approve Import' }}
+            {{ approving() ? (approveProgress() ?? 'Importing…') : 'Approve Import' }}
           </button>
         </div>
+        @if (approving() && approveProgress()) {
+          <p class="mb-4 text-sm text-slate-600">{{ approveProgress() }}</p>
+        }
 
         @if (upload.validRows === upload.duplicateRows && upload.validRows > 0) {
           <div class="mb-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">

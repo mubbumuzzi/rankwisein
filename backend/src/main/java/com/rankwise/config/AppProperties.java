@@ -15,6 +15,8 @@ public class AppProperties {
     private final Admin admin = new Admin();
     private final PdfImport pdfImport = new PdfImport();
     private final Cors cors = new Cors();
+    private final Cursor cursor = new Cursor();
+    private final Chat chat = new Chat();
 
     @Getter
     @Setter
@@ -41,5 +43,25 @@ public class AppProperties {
     @Setter
     public static class Cors {
         private String allowedOrigins;
+    }
+
+    @Getter
+    @Setter
+    public static class Cursor {
+        private String apiKey;
+        private String model;
+        private boolean enabled;
+        private long pollIntervalMs;
+        private long maxWaitMs;
+        private String agentNamePrefix;
+    }
+
+    @Getter
+    @Setter
+    public static class Chat {
+        private int rateLimitPerHour;
+        private int maxMessageLength;
+        private int leadCtaAfterMessages;
+        private int ragMaxArticles;
     }
 }

@@ -10,8 +10,95 @@ body {
   @apply bg-slate-50 text-rw-primary;
 }
 
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.sr-only:focus {
+  position: absolute;
+  width: auto;
+  height: auto;
+  padding: inherit;
+  margin: inherit;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+}
+
 .mat-mdc-form-field {
   width: 100%;
+}
+
+.mat-mdc-select-placeholder {
+  color: rgb(100 116 139);
+}
+
+/* Native form controls (avoids Material + Tailwind outline "pipe" layout) */
+@layer components {
+  .rw-field {
+    @apply block;
+  }
+
+  .rw-label {
+    @apply mb-1.5 block text-sm font-medium text-slate-700;
+  }
+
+  .rw-input {
+    @apply w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-rw-accent focus:ring-2 focus:ring-orange-100;
+  }
+
+  .rw-input-invalid {
+    @apply border-red-400 focus:border-red-400 focus:ring-red-100;
+  }
+
+  .rw-hint {
+    @apply mt-1 text-xs text-slate-500;
+  }
+
+  .rw-error {
+    @apply mt-1 text-sm text-red-600;
+  }
+
+  .rw-select-wrap {
+    @apply relative;
+  }
+
+  .rw-select {
+    @apply rw-input appearance-none pr-10;
+  }
+
+  .rw-select-chevron {
+    @apply pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.5s ease-out forwards;
+}
+
+.rw-check-dialog .mat-mdc-dialog-surface {
+  border-radius: 1rem !important;
+  padding: 0 !important;
+  overflow: hidden;
 }
 
 @layer components {

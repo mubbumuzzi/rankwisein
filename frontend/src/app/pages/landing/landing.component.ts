@@ -1,49 +1,102 @@
-import { Component } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { CheckCollegesLauncherService } from '../../core/services/check-colleges-launcher.service';
+import { FAQ_ITEMS } from '../../core/constants/seo.constants';
+import {
+  FOUNDER_BIO,
+  FOUNDER_CREDIT,
+  FOUNDER_LINKEDIN_URL,
+  INSTAGRAM_URL,
+  WHATSAPP_COMMUNITY_URL,
+} from '../../core/constants/site.constants';
 
 @Component({
   selector: 'app-landing',
   imports: [RouterLink],
   templateUrl: './landing.component.html',
 })
-export class LandingComponent {
-  readonly features = [
+export class LandingComponent implements OnInit {
+  private readonly launcher = inject(CheckCollegesLauncherService);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
+
+  readonly whatsappCommunityUrl = WHATSAPP_COMMUNITY_URL;
+  readonly instagramUrl = INSTAGRAM_URL;
+  readonly builderCredit = FOUNDER_CREDIT;
+  readonly builderBio = FOUNDER_BIO;
+  readonly builderLinkedInUrl = FOUNDER_LINKEDIN_URL;
+
+  readonly trustItems = [
+    'Previous Year Cutoff Analysis',
+    'Safe, Target & Dream Colleges',
+    'Free Counselling Community',
+  ];
+
+  readonly communityBenefits = [
+    'Counselling Updates',
+    'Certificate Verification Guidance',
+    'Web Options Support',
+    'College Selection Help',
+    'Branch Selection Guidance',
+    'Seat Allotment Updates',
+  ];
+
+  readonly howItWorks = [
+    { step: 1, title: 'Enter Your Rank', icon: '📝', description: 'Share rank, category, and branch interest.' },
     {
-      title: 'Rank-Based Analysis',
-      description: 'Compare your EAMCET rank against historical closing ranks for your category.',
+      step: 2,
+      title: 'Get College Recommendations',
+      icon: '🎓',
+      description: 'Instant lists from previous year cutoffs.',
+    },
+    {
+      step: 3,
+      title: 'Compare Safe, Target & Dream',
       icon: '📊',
+      description: 'Understand reach, match, and backup options.',
     },
     {
-      title: 'Dream Colleges',
-      description: 'Reach options — more competitive colleges with lower historical closing ranks.',
-      icon: '🎯',
-    },
-    {
-      title: 'Target Colleges',
-      description: 'Balanced matches where your rank aligns closely with past closing ranks.',
-      icon: '⚖️',
-    },
-    {
-      title: 'Safe Colleges',
-      description: 'Solid backup choices with higher closing ranks and a comfortable margin.',
-      icon: '🛡️',
-    },
-    {
-      title: 'Latest Cutoff Data',
-      description: 'Recommendations powered by official TG EAPCET cutoff records.',
-      icon: '📅',
-    },
-    {
-      title: 'Branch Recommendations',
-      description: 'Filter by your preferred branches — CSE, ECE, IT, and more.',
-      icon: '🏫',
+      step: 4,
+      title: 'Join Community For Guidance',
+      icon: '💬',
+      description: 'Get help on WhatsApp through counselling season.',
     },
   ];
 
-  readonly steps = [
-    'Enter your rank',
-    'Select category & gender',
-    'Choose preferred branches',
-    'Get Dream, Target & Safe lists',
+  readonly featureCards = [
+    { title: 'College Cutoff Lookup', icon: '🔍', description: 'Search any college and view closing ranks by year, phase, category and gender.' },
+    { title: 'Counselling Chatbot', icon: '🤖', description: 'Instant answers on dream, target, safe colleges and counselling steps.' },
+    { title: 'College Predictor', icon: '🎯', description: 'Rank-based Dream, Target & Safe shortlists.' },
+    { title: 'Branch Analysis', icon: '🔬', description: 'Filter by CSE, ECE, IT, and more.' },
+    { title: 'Counselling Guidance', icon: '🧭', description: 'Step-by-step support on WhatsApp.' },
+    { title: 'WhatsApp Community', icon: '👥', description: 'Free updates and peer support.' },
+    { title: 'Previous Year Cutoff Analysis', icon: '📅', description: 'Official TG EAPCET cutoff data.' },
+    { title: 'College Comparison', icon: '⚖️', description: 'Compare options by closing rank.' },
   ];
+
+  readonly faqItems = FAQ_ITEMS;
+
+  readonly proofItems = [
+    { label: '100+ Colleges Covered', icon: '🏫' },
+    { label: 'Multiple Branch Analysis', icon: '📐' },
+    { label: 'Previous Year Cutoff Data', icon: '📈' },
+    { label: 'Safe, Target & Dream Predictions', icon: '✨' },
+  ];
+
+  ngOnInit(): void {
+    this.route.queryParamMap.subscribe((params) => {
+      if (params.get('check') === '1') {
+        this.openCheckModal();
+        void this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: {},
+          replaceUrl: true,
+        });
+      }
+    });
+  }
+
+  openCheckModal(): void {
+    this.launcher.open();
+  }
 }

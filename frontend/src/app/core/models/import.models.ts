@@ -33,6 +33,8 @@ export interface ApproveImportResponse {
   durationMs: number;
 }
 
+export type ImportStatusResponse = ApproveImportResponse;
+
 export interface PurgeCutoffsResponse {
   year: number;
   phase: string;

@@ -3,11 +3,12 @@ import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { PredictStateService } from '../../core/services/predict-state.service';
 import { CollegeCardComponent } from '../../shared/components/college-card/college-card.component';
+import { WhatsappStickyCtaComponent } from '../../shared/components/whatsapp-sticky-cta/whatsapp-sticky-cta.component';
 import { CollegeRecommendation, PredictResponse } from '../../core/models/predict.models';
 
 @Component({
   selector: 'app-results',
-  imports: [RouterLink, CollegeCardComponent, DecimalPipe],
+  imports: [RouterLink, CollegeCardComponent, DecimalPipe, WhatsappStickyCtaComponent],
   templateUrl: './results.component.html',
 })
 export class ResultsComponent implements OnInit {
@@ -26,7 +27,7 @@ export class ResultsComponent implements OnInit {
     const r = this.state.lastResult();
     const f = this.state.lastForm();
     if (!r) {
-      void this.router.navigate(['/check']);
+      void this.router.navigate(['/'], { queryParams: { check: '1' } });
       return;
     }
     this.result.set(r);

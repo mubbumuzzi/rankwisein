@@ -39,6 +39,7 @@ export class CounsellingChatbotComponent implements OnInit, OnDestroy {
   readonly suggested = signal<string[]>([]);
   readonly profile = signal<StudentProfile>(this.emptyProfile());
   readonly showLeadCta = signal(false);
+  readonly errorMessage = signal<string | null>(null);
 
   draft = '';
   sessionId: number | null = null;
@@ -145,6 +146,7 @@ export class CounsellingChatbotComponent implements OnInit, OnDestroy {
       createdAt: new Date().toISOString(),
     };
     this.messages.update((m) => [...m, userMsg]);
+    this.errorMessage.set(null);
     this.draft = '';
     this.typing.set(true);
     this.scrollSoon();

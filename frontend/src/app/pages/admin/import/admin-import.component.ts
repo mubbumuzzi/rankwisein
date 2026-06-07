@@ -193,10 +193,12 @@ export class AdminImportComponent implements OnInit {
   }
 
   private pollImportStatus(importId: number, attempt = 0): void {
-    if (attempt > 180) {
+    if (attempt > 600) {
       this.approving.set(false);
       this.approveProgress.set(null);
-      this.errorMessage.set('Import is taking longer than expected. Refresh the page and check import status.');
+      this.errorMessage.set(
+        'Import is taking longer than expected. Refresh the page — if status stays IMPORTING, reset via server and try again.',
+      );
       return;
     }
 

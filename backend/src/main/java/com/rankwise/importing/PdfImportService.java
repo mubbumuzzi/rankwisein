@@ -19,6 +19,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
@@ -27,9 +29,13 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
 public class PdfImportService {
+
+    private static final Logger logger = LoggerFactory.getLogger(PdfImportService.class);
 
     private final AppProperties props;
     private final ImportFileRepository importFileRepository;
@@ -192,7 +198,13 @@ public class PdfImportService {
         importFileRepository.save(importFile);
         log(importId, "APPROVE queued (async)");
 
-        approveAsyncService.runApprove(importId);
+        // Run after commit so the async worker sees status=IMPORTING (avoids silent no-op race).
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                approveAsyncService.runApprove(importId);
+            }
+        });
 
         StagingCounts counts = stagingCounts(importId);
         return new ApproveImportResponse(importId, "IMPORTING", 0, counts.skippedDuplicates(), counts.invalidRows(), 0);
@@ -203,8 +215,11 @@ public class PdfImportService {
         ImportFile importFile = importFileRepository.findById(importId)
                 .orElseThrow(() -> new ImportException("Import not found: " + importId));
         if (!"IMPORTING".equals(importFile.getStatus())) {
+            logger.warn("executeApprove skipped import {} — status is {}", importId, importFile.getStatus());
             return;
         }
+
+        logger.info("executeApprove started for import {}", importId);
 
         Instant start = Instant.now();
         StagingCounts counts = stagingCounts(importId);
@@ -220,10 +235,12 @@ public class PdfImportService {
             importFileRepository.save(importFile);
             log(importId, "APPROVED inserted=" + inserted + " skippedDup=" + counts.skippedDuplicates()
                     + " invalid=" + counts.invalidRows() + " durationMs=" + durationMs);
+            logger.info("executeApprove finished import {} — inserted {}", importId, inserted);
         } catch (Exception e) {
             importFile.setStatus("FAILED");
             importFileRepository.save(importFile);
             log(importId, "FAILED during approve: " + e.getMessage());
+            logger.error("executeApprove failed for import {}", importId, e);
         }
     }
 

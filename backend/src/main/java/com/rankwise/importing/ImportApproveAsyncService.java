@@ -18,6 +18,7 @@ public class ImportApproveAsyncService {
 
     @Async
     public void runApprove(Long importId) {
+        log.info("Async approve starting for import {}", importId);
         try {
             importService.executeApprove(importId);
         } catch (Exception e) {

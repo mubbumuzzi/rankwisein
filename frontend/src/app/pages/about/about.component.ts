@@ -4,7 +4,7 @@ import {
   FOUNDER_BIO,
   FOUNDER_CREDIT,
   FOUNDER_LINKEDIN_URL,
-  WHATSAPP_DISPLAY,
+  WHATSAPP_CTA_LABEL,
   WHATSAPP_URL,
 } from '../../core/constants/site.constants';
 
@@ -42,7 +42,7 @@ import {
         target="_blank"
         rel="noopener noreferrer"
         class="mt-8 inline-flex rounded-xl bg-emerald-600 px-8 py-3 font-semibold text-white hover:bg-emerald-700"
-        >WhatsApp us at {{ whatsappDisplay }}</a
+        >{{ whatsappCtaLabel }}</a
       >
       <a routerLink="/" class="mt-6 block text-sm font-semibold text-rw-accent hover:underline">← Back to home</a>
     </div>
@@ -50,7 +50,7 @@ import {
 })
 export class AboutComponent {
   readonly whatsappUrl = WHATSAPP_URL;
-  readonly whatsappDisplay = WHATSAPP_DISPLAY;
+  readonly whatsappCtaLabel = WHATSAPP_CTA_LABEL;
   readonly builderCredit = FOUNDER_CREDIT;
   readonly founderBio = FOUNDER_BIO;
   readonly linkedinUrl = FOUNDER_LINKEDIN_URL;

@@ -3,11 +3,18 @@ import { RouterOutlet } from '@angular/router';
 import { AppHeaderComponent } from './shared/components/app-header/app-header.component';
 import { AppFooterComponent } from './shared/components/app-footer/app-footer.component';
 import { CounsellingChatbotComponent } from './shared/components/counselling-chatbot/counselling-chatbot.component';
+import { WhatsappFabComponent } from './shared/components/whatsapp-fab/whatsapp-fab.component';
 import { SeoService } from './core/services/seo.service';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, AppHeaderComponent, AppFooterComponent, CounsellingChatbotComponent],
+  imports: [
+    RouterOutlet,
+    AppHeaderComponent,
+    AppFooterComponent,
+    CounsellingChatbotComponent,
+    WhatsappFabComponent,
+  ],
   template: `
     <a
       href="#main-content"
@@ -19,6 +26,7 @@ import { SeoService } from './core/services/seo.service';
       <router-outlet />
     </main>
     <app-footer />
+    <app-whatsapp-fab />
     <app-counselling-chatbot />
   `,
 })

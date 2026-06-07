@@ -4,7 +4,7 @@ import {
   CONTACT_EMAIL,
   INSTAGRAM_URL,
   RANKWISE_LINKEDIN_URL,
-  WHATSAPP_DISPLAY,
+  WHATSAPP_CTA_LABEL,
   WHATSAPP_URL,
 } from '../../../core/constants/site.constants';
 
@@ -40,7 +40,7 @@ import {
             <ul class="mt-4 space-y-2 text-sm">
               <li>
                 <a [href]="whatsappUrl" target="_blank" rel="noopener noreferrer" class="hover:text-white"
-                  >WhatsApp · {{ whatsappDisplay }}</a
+                  >{{ whatsappCtaLabel }}</a
                 >
               </li>
               <li>
@@ -76,7 +76,7 @@ import {
 export class AppFooterComponent {
   readonly year = new Date().getFullYear();
   readonly whatsappUrl = WHATSAPP_URL;
-  readonly whatsappDisplay = WHATSAPP_DISPLAY;
+  readonly whatsappCtaLabel = WHATSAPP_CTA_LABEL;
   readonly instagramUrl = INSTAGRAM_URL;
   readonly linkedinUrl = RANKWISE_LINKEDIN_URL;
   readonly contactEmail = CONTACT_EMAIL;

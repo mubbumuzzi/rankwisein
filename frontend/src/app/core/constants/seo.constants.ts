@@ -56,7 +56,7 @@ export const FAQ_ITEMS: { question: string; answer: string }[] = [
   {
     question: 'How can I get personalized counselling from RankWise?',
     answer:
-      'WhatsApp us at 8121871508 for one-on-one TG EAPCET counselling help — web options, certificate guidance, branch selection tips, and seat allotment updates throughout admission season.',
+      'Message us on WhatsApp for one-on-one TG EAPCET counselling help — web options, certificate guidance, branch selection tips, and seat allotment updates throughout admission season.',
   },
   {
     question: 'How does TG EAPCET counselling work?',

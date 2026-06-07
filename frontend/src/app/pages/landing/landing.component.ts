@@ -7,7 +7,7 @@ import {
   FOUNDER_CREDIT,
   FOUNDER_LINKEDIN_URL,
   INSTAGRAM_URL,
-  WHATSAPP_DISPLAY,
+  WHATSAPP_CTA_LABEL,
   WHATSAPP_URL,
 } from '../../core/constants/site.constants';
 
@@ -22,7 +22,7 @@ export class LandingComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
 
   readonly whatsappUrl = WHATSAPP_URL;
-  readonly whatsappDisplay = WHATSAPP_DISPLAY;
+  readonly whatsappCtaLabel = WHATSAPP_CTA_LABEL;
   readonly instagramUrl = INSTAGRAM_URL;
   readonly builderCredit = FOUNDER_CREDIT;
   readonly builderBio = FOUNDER_BIO;

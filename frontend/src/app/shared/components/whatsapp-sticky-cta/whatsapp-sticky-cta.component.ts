@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
-import { WHATSAPP_DISPLAY, WHATSAPP_URL } from '../../../core/constants/site.constants';
+import { Component, OnInit, inject } from '@angular/core';
+import { buildWhatsAppUrl, WHATSAPP_CTA_LABEL, WHATSAPP_URL } from '../../../core/constants/site.constants';
+import { PredictStateService } from '../../../core/services/predict-state.service';
 
 @Component({
   selector: 'app-whatsapp-sticky-cta',
@@ -9,7 +10,7 @@ import { WHATSAPP_DISPLAY, WHATSAPP_URL } from '../../../core/constants/site.con
     >
       <div class="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 sm:flex-row">
         <p class="text-center text-sm font-medium text-rw-primary sm:text-left">
-          Need personalized counselling? WhatsApp us at {{ whatsappDisplay }}
+          Need one-on-one help with web options, branches, or seat allotment?
         </p>
         <a
           [href]="whatsappUrl"
@@ -17,14 +18,27 @@ import { WHATSAPP_DISPLAY, WHATSAPP_URL } from '../../../core/constants/site.con
           rel="noopener noreferrer"
           class="inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 text-sm font-bold text-white shadow-md transition hover:bg-emerald-700 sm:w-auto"
         >
-          WhatsApp · {{ whatsappDisplay }}
+          {{ whatsappCtaLabel }}
         </a>
       </div>
     </div>
     <div class="h-24 sm:h-20" aria-hidden="true"></div>
   `,
 })
-export class WhatsappStickyCtaComponent {
-  readonly whatsappUrl = WHATSAPP_URL;
-  readonly whatsappDisplay = WHATSAPP_DISPLAY;
+export class WhatsappStickyCtaComponent implements OnInit {
+  private readonly predictState = inject(PredictStateService);
+
+  whatsappUrl = WHATSAPP_URL;
+  readonly whatsappCtaLabel = WHATSAPP_CTA_LABEL;
+
+  ngOnInit(): void {
+    const form = this.predictState.lastForm();
+    if (!form) return;
+
+    const branches = form.preferredBranches?.length ? form.preferredBranches.join(', ') : '—';
+    this.whatsappUrl = buildWhatsAppUrl(
+      `Hi RankWise! I checked my college list on the site and need personalized counselling.\n` +
+        `Rank: ${form.rank}\nCategory: ${form.category}\nGender: ${form.gender}\nBranches: ${branches}`,
+    );
+  }
 }

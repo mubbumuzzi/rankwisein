@@ -10,7 +10,7 @@ import {
 import { FormsModule } from '@angular/forms';
 import { NavigationEnd, Router } from '@angular/router';
 import { filter, firstValueFrom, Subscription } from 'rxjs';
-import { WHATSAPP_DISPLAY, WHATSAPP_URL } from '../../../core/constants/site.constants';
+import { WHATSAPP_CTA_LABEL, WHATSAPP_URL } from '../../../core/constants/site.constants';
 import { ChatMessage, StudentProfile } from '../../../core/models/ai-counsellor.models';
 import { AiCounsellorService } from '../../../core/services/ai-counsellor.service';
 import { CheckCollegesLauncherService } from '../../../core/services/check-colleges-launcher.service';
@@ -49,7 +49,7 @@ export class CounsellingChatbotComponent implements OnInit, OnDestroy {
   private routerSub?: Subscription;
 
   readonly whatsappUrl = WHATSAPP_URL;
-  readonly whatsappDisplay = WHATSAPP_DISPLAY;
+  readonly whatsappCtaLabel = WHATSAPP_CTA_LABEL;
 
   readonly categories = ['OC', 'BC-A', 'BC-B', 'BC-C', 'BC-D', 'BC-E', 'SC-I', 'SC-II', 'SC-III', 'ST', 'EWS'];
   readonly genders = [
